@@ -1,0 +1,284 @@
+defmodule LangTags.TagTest do
+  use ExUnit.Case, async: true
+  
+  alias LangTags.Tag, as: T
+
+  test "type/1 returns 'grandfathered'" do
+    # Classified as grandfathered in the registry.
+    assert "en-GB-oed" |> T.new() |> T.type() == "grandfathered"
+  end
+
+  test "type/1 returns 'redundant'" do
+    # Classified as redundant in the registry.
+    assert "az-Arab" |> T.new() |> T.type() == "redundant"
+    assert "uz-Cyrl" |> T.new() |> T.type() == "redundant"
+    assert "zh-cmn-Hant" |> T.new() |> T.type() == "redundant"
+  end
+
+  test "type/1 returns 'tag'" do
+    # Maltese (mt) is a subtag but valid as a standalone tag.
+    assert "mt" |> T.new() |> T.type() == "tag"
+  end
+
+  test "subtags/1 returns subtags with correct type" do
+    subtags = "en" |> Tag.new() |> T.subtags()
+    assert subtags |> Enum.count() == 1
+    assert subtags |> List.first() |> T.type() == "language"
+    assert subtags |> List.first() |> T.format() == "en"
+
+    # Lowercase - lookup should be case insensitive.
+    subtags = "en-mt" |> T.new() |> T.subtags()
+    assert subtags |> Enum.count() == 2
+    assert subtags |> List.first() |> T.type() == "language"
+    assert subtags |> List.first() |> T.format() == "en"
+    assert subtags |> Enum.at(1) |> T.type() == "region"
+    assert subtags |> Enum.at(1) |> T.format() == "MT"
+
+    subtags = "en-mt-arab" |> T.new() |> T.subtags()
+    assert subtags.length, 3
+    assert subtags |> Enum.at(0) |> T.type() == "language"
+    assert subtags |> Enum.at(0) |> T.format() == "en"
+    assert subtags |> Enum.at(1) |> T.type() == "region"
+    assert subtags |> Enum.at(1) |> T.format() == "MT"
+    assert subtags |> Enum.at(2) |> T.type() == "script"
+    assert subtags |> Enum.at(2) |> T.format() == "Arab"
+  end
+
+  test "subtags/1 returns only existent subtags" do
+    assert "hello" |> T.new() |> T.subtag() == []
+
+    subtags = "en-hello" |> T.new() |> T.subtags()
+    assert subtags |> Enum.count() == 1
+    assert subtags |> List.first() |> T.type() == "language"
+    assert subtags |> List.first() |> T.format() == "en"
+  end
+
+  test "subtags/1 handles private tags" do
+    subtags = "en-GB-x-Beano" |> T.new() |> T.subtags()
+    assert subtags |> Enum.count() == 2
+    assert subtags |> List.first() |> T.type() == "language"
+    assert subtags |> List.first() |> T.format() == "en"
+    assert subtags |> List.first() |> T.type() == "region"
+    assert subtags |> List.first() |> T.format() == "GB"
+  end
+
+  test "subtags/1 returns empty array for grandfathered tag" do
+    tag = "en-GB-oed" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    subtags = tag |> T.subtags()
+    assert subtags == []
+    assert tag |> T.region() == nil
+    assert tag |> T.language() == nil
+  end
+
+  test "subtags/1 returns array for redundant tag" do
+    tag = "az-Arab" |> T.new()
+    assert tag |> T.type() == "redundant"
+    subtags = tag |> T.subtags()
+    assert subtags |> Enum.count() == 2
+    assert subtags |> List.first() |> T.format() == "az"
+    assert subtags |> List.last() |> T.format() == "Arab"
+  end
+
+  test "valid/1 returns true for valid tag" do
+    assert "en" |> T.new() |> T.valid()
+    assert "en-GB" |> T.new() |> T.valid()
+    assert "gsw" |> T.new() |> T.valid()
+    assert "de-CH" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns true for subtag followed by private tag" do
+    assert "en-x-whatever" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns true for non-deprecated grandfathered tag" do
+    # Grandfathered but not deprecated, therefore valid.
+    tag = "i-default" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    refute tag |> T.deprecated()
+    assert tag |> T.valid()
+  end
+
+  test "valid/1 returns true for non-deprecated redundant tag" do
+    # Redundant but not deprecated, therefore valid.
+    tag = "zh-Hans" |> T.new()
+    assert tag |> T.type() == "redundant"
+    refute tag |> T.deprecated()
+    assert tag |> T.valid()
+
+    tag = "es-419" |> T.new()
+    assert tag |> T.type() == "redundant"
+    refute tag |> T.deprecated()
+    assert tag |> T.valid()
+  end
+
+  test "valid/1 returns false for non-existent tag" do
+    refute "zzz" |> T.new |> T.valid()
+    refute "zzz-Latn" |> T.new() |> T.valid()
+    refute "en-Lzzz" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false for deprecated grandfathered tag" do
+  # Grandfathered and deprecated, therefore invalid.
+    tag = "art-lojban" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    assert tag |> T.deprecated()
+    refute tag |> T.valid()
+  end
+
+  test "valid/1 returns false for deprecated redundant tag" do
+    # Redundant and deprecated, therefore invalid.
+    tag = "zh-cmn" |> T.new()
+    assert tag |> T.type() == "redundant"
+    assert tag |> T.deprecated()
+    refute tag |> T.valid()
+    tag = "zh-cmn-Hans" |> T.new()
+    assert tag |> T.type() == "redundant"
+    assert tag |> T.deprecated()
+    refute tag |> T.valid()
+  end
+
+  test "valid/1 returns false if contains deprecated subtags" do
+    # Moldovan (mo) is deprecated as a language.
+    refute "mo" |> T.new() |> T.valid()
+
+    # Neutral Zone (NT) is deprecated as a region.
+    refute "en-NT" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false for tag with redundant script subtag" do
+    # Swiss German (gsw) has a suppress script of Latn.
+    refute "gsw-Latn" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if tag contains no language tag and is not grandfathered or redundant" do
+    refute "IQ-Arab" |> T.new() |> T.valid()
+    refute "419" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if language subtag is not front of tag" do
+    refute "GB-en" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if more than one language subtag appears" do
+    refute "en-en" |> T.new() |> T.valid()
+    refute "ko-en" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if more than one region subtag appears" do
+    refute "en-001-gb" |> T.new() |> T.valid()
+    refute "gb-001" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if more than one extlang subtag appears" do
+    refute "en-asp-bog" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if more than one script subtag appears" do
+    refute "arb-Latn-Cyrl" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if a duplicate variant subtag appears" do
+    refute "ca-valencia-valencia" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if private-use subtag contains more than 8 characters" do
+    # i.e. more than 8 in each component, not in total.
+    refute "en-x-more-than-eight-chars" |> T.new() |> T.valid()
+    refute "en-x-morethaneightchars" |> T.new() |> T.valid()
+  end
+
+  test "valid/1 returns false if script subtag is same as language suppress-script" do
+    "en-Latn" |> T.new() |> T.valid()
+    "en-GB-Latn" |> T.new() |> T.valid()
+    "gsw-Latn" |> T.new() |> T.valid()
+  end
+
+  test "deprecated/1 returns deprecation date when available" do
+    # Redundant and deprecated.
+    tag = "zh-cmn-Hant" |> T.new()
+    assert tag |> T.type() == "redundant"
+    assert tag |> T.deprecated() == "2009-07-29"
+
+    # Redundant but not deprecated.
+    tag = "zh-Hans" |> T.new()
+    assert tag |> T.type() == "redundant"
+    refute tag |> T.deprecated()
+
+    # Grandfathered and deprecated.
+    tag = "zh-xiang" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    assert tag |> T.deprecated() == "2009-07-29"
+
+    # Grandfathered but not deprecated.
+    tag = "i-default" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    refute tag |> T.deprecated()
+  end
+
+  test "added/1 returns add date when available" do
+    # Redundant and deprecated.
+    tag = "zh-cmn-Hant" |> T.new()
+    assert tag |> T.type() == "redundant"
+    assert tag |> T.added() == "2005-07-15"
+
+    # Redundant but not deprecated.
+    tag = "zh-Hans" |> T.new()
+    assert tag |> T.type() == "redundant"
+    refute tag |> T.deprecated()
+    assert tag |> T.added() == "2003-05-30"
+
+    # Grandfathered and deprecated.
+    tag = "zh-xiang" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    assert tag |> T.added() == "1999-12-18"
+
+    # Grandfathered but not deprecated.
+    tag = "i-default" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    refute tag |> T.deprecated()
+    assert tag |> T.added() == "1998-03-10"
+  end
+
+  test "descriptions/1 returns descriptions when available" do
+    tag = "i-default" |> T.new()
+    assert tag |> T.type() == "grandfathered"
+    refute tag |> T.deprecated()
+    assert tag |> T.descriptions() == ["Default Language"]
+
+    # Otherwise returns an empty array.
+    assert "en" |> T.new() |> T.descriptions() == []
+  end
+
+  test "format/1 formats tag according to conventions" do
+    assert "en" |> T.new() |> T.format() == "en"
+    assert "En" |> T.new() |> T.format() == "en"
+    assert "EN" |> T.new() |> T.format() == "en"
+    assert "eN" |> T.new() |> T.format() == "en"
+    assert "en-gb" |> T.new() |> T.format() == "en-GB"
+    assert "en-gb-oed" |> T.new() |> T.format() == "en-GB-oed"
+    assert "az-latn" |> T.new() |> T.format() == "az-Latn"
+    assert "ZH-hant-hK" |> T.new() |> T.format() == "zh-Hant-HK"
+  end
+
+  test "preferred/1 returns preferred tag if available" do
+    tag = "zh-cmn-Hant" |> T.new()
+
+    assert tag |> T.type() == "redundant"
+    assert tag |> T.deprecated()
+    assert tag |> T.preferred()
+    assert tag |> T.preferred() |> T.format() == "cmn-Hant"
+
+    refute "zh-Hans" |> T.new() |> T.preferred()
+  end
+
+  test "region/1 and language/1 return subtags for redundant tags" do
+    tag = "es-419" |> T.new()
+    assert tag |> T.region() |> T.descriptions() == ["Latin America and the Caribbean"]
+    assert tag |> T.language() |> T.descriptions() == ["Spanish", "Castilian"]
+
+    tag = "sgn-NL" |> T.new()
+    assert tag |> T.region() |> T.descriptions() == ["Netherlands"]
+    assert tag |> T.language() |> T.descriptions() == ["Sign languages"]
+  end
+end
