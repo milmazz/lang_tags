@@ -1,20 +1,20 @@
 defmodule LangTags.SubTagTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest LangTags.SubTag
 
   alias LangTags.SubTag, as: ST
 
-  test "SubTag.type() returns type" do
+  test "type/1 returns type" do
     assert ST.new("zh", "language") |> ST.type() == "language"
     assert ST.new("IQ", "region") |> ST.type() == "region"
   end
 
-  test "SubTag.descriptions() returns descriptions" do
+  test "descriptions/1 returns descriptions" do
     assert ST.new("IQ", "region") |> ST.descriptions() == ["Iraq"]
     assert ST.new("vsv", "extlang") |> ST.descriptions() == ["Valencian Sign Language", "Llengua de signes valenciana"]
   end
 
-  test "SubTag.preferred() returns preferred subtag" do
+  test "preferred/1 returns preferred subtag" do
     # Extlang
     subtag = ST.new("vsv", "extlang")
     preferred = ST.preferred(subtag)
@@ -48,10 +48,10 @@ defmodule LangTags.SubTagTest do
     # Should return nil if no preferred value.
     # Latin America and the Caribbean
     subtag = ST.new("419", "region");
-    assert ST.preferred(subtag) == nil
+    refute ST.preferred(subtag)
   end
 
-  test "SubTag.script() returns suppress-script as subtag" do
+  test "script/1 returns suppress-script as subtag" do
     subtag = ST.new("en", "language")
     script = ST.script(subtag)
     assert script
@@ -62,33 +62,33 @@ defmodule LangTags.SubTagTest do
     # A macrolanguage like 'zh' should have no suppress-script.
     subtag = ST.new("zh", "language")
     script = ST.script(subtag)
-    assert script == nil
+    refute script
   end
 
-  test "SubTag.scope() returns scope" do
+  test "scope/1 returns scope" do
     assert ST.new("zh", "language") |> ST.scope() == "macrolanguage"
     assert ST.new("nah", "language") |> ST.scope() == "collection"
-    assert ST.new("en", "language") |> ST.scope() == nil
-    assert ST.new("IQ", "region") |> ST.scope() == nil
+    refute ST.new("en", "language") |> ST.scope()
+    refute ST.new("IQ", "region") |> ST.scope()
   end
 
-  test "SubTag.deprecated() returns deprecation date if available" do
+  test "deprecated/1 returns deprecation date if available" do
     # German democratic Republic
     assert ST.new("DD", "region") |> ST.deprecated() == "1990-10-30"
     assert ST.new("DE", "region") |> ST.deprecated() == nil
   end
 
-  test "SubTag.added() returns date added" do
+  test "added/1 returns date added" do
     assert ST.new("DD", "region") |> ST.added() == "2005-10-16"
     assert ST.new("DG", "region") |> ST.added() == "2009-07-29"
   end
 
-  test "SubTag.comments() returns comments" do
+  test "comments/1 returns comments" do
     # Yugoslavia
     assert ST.new("YU", "region") |> ST.comments() == ["see BA, HR, ME, MK, RS, or SI"]
   end
 
-  test "SubTag.format() formats subtag according to conventions" do
+  test "format/1 formats subtag according to conventions" do
     # Language
     assert ST.new("en", "language") |> ST.format() == "en"
     assert ST.new("EN", "language") |> ST.format() == "en"
