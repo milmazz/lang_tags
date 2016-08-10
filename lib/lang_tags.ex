@@ -1,9 +1,8 @@
 defmodule LangTags do
+  alias LangTags.Registry
 
-
-  meta = LangTags.Registry.get_data("priv/language-subtag-registry/data/json/meta.json")
-
-  def version do
-    unquote(meta["File-Date"])
+  def date do
+    registry = Registry.data()
+    registry["File-Date"]
   end
 end

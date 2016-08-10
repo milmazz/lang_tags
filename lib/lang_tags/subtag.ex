@@ -1,28 +1,22 @@
 defmodule LangTags.SubTag do
   alias LangTags.Registry
 
-  def registry do
-    "priv/language-subtag-registry/data/json/registry.json"
-    |> Registry.get_data()
-  end
-
   def new(subtag, type) do
-    registry = registry()
+    registry = Registry.data()
     # Lowercase for consistency (case is only a formatting convention, not a standard requirement).
     subtag = String.downcase(subtag)
     type = String.downcase(type)
 
-    types = Registry.index(subtag)
+    types = registry[subtag]
     unless types do
       raise "Non-existent subtag '#{subtag}'."
     end
 
-    idx = types[type]
-    unless idx do
+    record = types[type]
+    unless record do
       raise "Non-existent subtag '#{subtag}' of type '#{type}'."
     end
 
-    record = Enum.at(registry, idx)
     unless record["Subtag"] do
       raise "'#{subtag}' is a '#{type}' tag."
     end
