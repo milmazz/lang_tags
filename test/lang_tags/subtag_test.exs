@@ -2,103 +2,105 @@ defmodule LangTags.SubTagTest do
   use ExUnit.Case, async: true
   doctest LangTags.SubTag
 
-  alias LangTags.SubTag, as: ST
+  import LangTags.SubTag, only: [added: 1, comments: 1, deprecated: 1,
+                                 descriptions: 1, format: 1, new: 2,
+                                 preferred: 1, scope: 1, script: 1, type: 1]
 
   test "type/1 returns type" do
-    assert ST.new("zh", "language") |> ST.type() == "language"
-    assert ST.new("IQ", "region") |> ST.type() == "region"
+    assert new("zh", "language") |> type() == "language"
+    assert new("IQ", "region") |> type() == "region"
   end
 
   test "descriptions/1 returns descriptions" do
-    assert ST.new("IQ", "region") |> ST.descriptions() == ["Iraq"]
-    assert ST.new("vsv", "extlang") |> ST.descriptions() == ["Valencian Sign Language", "Llengua de signes valenciana"]
+    assert new("IQ", "region") |> descriptions() == ["Iraq"]
+    assert new("vsv", "extlang") |> descriptions() == ["Valencian Sign Language", "Llengua de signes valenciana"]
   end
 
   test "preferred/1 returns preferred subtag" do
     # Extlang
-    subtag = ST.new("vsv", "extlang")
-    preferred = ST.preferred(subtag)
+    subtag = new("vsv", "extlang")
+    preferred = preferred(subtag)
     assert preferred
-    assert ST.type(preferred) == "language"
-    assert ST.format(preferred) == "vsv"
+    assert type(preferred) == "language"
+    assert format(preferred) == "vsv"
 
     # Language
     # Moldovan -> Romanian
-    subtag = ST.new("mo", "language")
-    preferred = ST.preferred(subtag)
+    subtag = new("mo", "language")
+    preferred = preferred(subtag)
     assert preferred
-    assert ST.type(preferred) == "language"
-    assert ST.format(preferred) == "ro"
+    assert type(preferred) == "language"
+    assert format(preferred) == "ro"
 
     # Region
     # Burma -> Myanmar
-    subtag = ST.new("BU", "region")
-    preferred = ST.preferred(subtag)
+    subtag = new("BU", "region")
+    preferred = preferred(subtag)
     assert preferred
-    assert ST.type(preferred) == "region"
-    assert ST.format(preferred) == "MM"
+    assert type(preferred) == "region"
+    assert format(preferred) == "MM"
 
     # Variant
-    subtag = ST.new("heploc", "variant")
-    preferred = ST.preferred(subtag)
+    subtag = new("heploc", "variant")
+    preferred = preferred(subtag)
     assert preferred
-    assert ST.type(preferred) == "variant"
-    assert ST.format(preferred) == "alalc97"
+    assert type(preferred) == "variant"
+    assert format(preferred) == "alalc97"
 
     # Should return nil if no preferred value.
     # Latin America and the Caribbean
-    subtag = ST.new("419", "region");
-    refute ST.preferred(subtag)
+    subtag = new("419", "region");
+    refute preferred(subtag)
   end
 
   test "script/1 returns suppress-script as subtag" do
-    subtag = ST.new("en", "language")
-    script = ST.script(subtag)
+    subtag = new("en", "language")
+    script = script(subtag)
     assert script
-    assert ST.type(script) == "script"
-    assert ST.format(script) == "Latn"
+    assert type(script) == "script"
+    assert format(script) == "Latn"
 
     # Should return null if no script.
     # A macrolanguage like 'zh' should have no suppress-script.
-    subtag = ST.new("zh", "language")
-    script = ST.script(subtag)
+    subtag = new("zh", "language")
+    script = script(subtag)
     refute script
   end
 
   test "scope/1 returns scope" do
-    assert ST.new("zh", "language") |> ST.scope() == "macrolanguage"
-    assert ST.new("nah", "language") |> ST.scope() == "collection"
-    refute ST.new("en", "language") |> ST.scope()
-    refute ST.new("IQ", "region") |> ST.scope()
+    assert new("zh", "language") |> scope() == "macrolanguage"
+    assert new("nah", "language") |> scope() == "collection"
+    refute new("en", "language") |> scope()
+    refute new("IQ", "region") |> scope()
   end
 
   test "deprecated/1 returns deprecation date if available" do
     # German democratic Republic
-    assert ST.new("DD", "region") |> ST.deprecated() == "1990-10-30"
-    assert ST.new("DE", "region") |> ST.deprecated() == nil
+    assert new("DD", "region") |> deprecated() == "1990-10-30"
+    assert new("DE", "region") |> deprecated() == nil
   end
 
   test "added/1 returns date added" do
-    assert ST.new("DD", "region") |> ST.added() == "2005-10-16"
-    assert ST.new("DG", "region") |> ST.added() == "2009-07-29"
+    assert new("DD", "region") |> added() == "2005-10-16"
+    assert new("DG", "region") |> added() == "2009-07-29"
   end
 
   test "comments/1 returns comments" do
     # Yugoslavia
-    assert ST.new("YU", "region") |> ST.comments() == ["see BA, HR, ME, MK, RS, or SI"]
+    assert new("YU", "region") |> comments() == ["see BA, HR, ME, MK, RS, or SI"]
   end
 
   test "format/1 formats subtag according to conventions" do
     # Language
-    assert ST.new("en", "language") |> ST.format() == "en"
-    assert ST.new("EN", "language") |> ST.format() == "en"
+    assert new("en", "language") |> format() == "en"
+    assert new("EN", "language") |> format() == "en"
 
     # Region
-    assert ST.new("GB", "region") |> ST.format() == "GB"
-    assert ST.new("gb", "region") |> ST.format() == "GB"
+    assert new("GB", "region") |> format() == "GB"
+    assert new("gb", "region") |> format() == "GB"
 
     # Script
-    assert ST.new("Latn", "script") |> ST.format() == "Latn"
-    assert ST.new("latn", "script") |> ST.format() == "Latn"
+    assert new("Latn", "script") |> format() == "Latn"
+    assert new("latn", "script") |> format() == "Latn"
   end
 end

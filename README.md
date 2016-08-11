@@ -1,10 +1,12 @@
-# LangTags
+# LangTags: IANA Language Tags for Elixir
 
-**TODO: Add description**
+Based on [BCP 47][] ([RFC 5646][]) and the latest [IANA language subtag registry][Registry].
+
+This project will be updated as the standards change.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+If [available in Hex][Hex], the package can be installed as:
 
   1. Add `lang_tags` to your list of dependencies in `mix.exs`:
 
@@ -22,6 +24,9 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
     end
     ```
 
-If [published on HexDocs](https://hex.pm/docs/tasks#hex_docs), the docs can
-be found at [https://hexdocs.pm/lang_tags](https://hexdocs.pm/lang_tags)
+The docs can be found at [https://hexdocs.pm/lang_tags](https://hexdocs.pm/lang_tags)
 
+[BCP 47]: http://tools.ietf.org/html/bcp47
+[RFC 5646]: http://tools.ietf.org/html/rfc5646
+[Registry]: http://www.iana.org/assignments/language-subtag-registry
+[Hex]: https://hex.pm/docs/publish
