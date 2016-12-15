@@ -155,4 +155,69 @@ defmodule LangTags.SubTag do
     char <> rest
   end
   defp process_format(subtag, _), do: subtag
+
+  @doc """
+  Indicates if the given string is a subtag that represents a collection of languages
+
+  A collection is typically related by some type of historical, geographical,
+  or linguistic association.
+
+  Unlike a macrolanguage, a collection can contain languages that are only
+  loosely related and a collection cannot be used interchangeably with languages
+  that belong to it.
+
+  ## Examples
+
+    iex> LangTags.SubTag.collection?("cdd")
+    true
+
+  """
+  @spec collection?(String.t) :: boolean
+  def collection?(subtag), do: Registry.collection?(subtag)
+
+  @doc """
+  Indicates if the given string is a macrolanguage as defined by ISO 639-3.
+
+  A macrolanguage is a cluster of closely related languages that are sometimes
+  considered to be a single language.
+
+  ## Examples
+
+    iex> LangTags.SubTag.macrolanguage?("kpe")
+    true
+
+  """
+  @spec macrolanguage?(String.t) :: boolean
+  def macrolanguage?(subtag), do: Registry.macrolanguage?(subtag)
+
+  @doc """
+  Indicates if the given string represents a special language code.
+
+  These are subtags used for identifying linguistic attributes not particularly
+  associated with a concrete language. These include codes for when the language
+  is undetermined or for non-linguistic content.
+
+  ## Examples
+
+    iex> LangTags.SubTag.special?("zxx")
+    true
+
+  """
+  @spec special?(String.t) :: boolean
+  def special?(subtag), do: Registry.special?(subtag)
+
+  @doc """
+  Indicates if the given string represents a code reserved for private use in the ISO 639 standard.
+
+  Subtags with this scope can be used to indicate a primary language for which
+  no ISO 639 or registered assignment exists.
+
+  ## Examples
+
+    iex> LangTags.SubTag.private_use?("qaa..qtz")
+    true
+
+  """
+  @spec private_use?(String.t) :: boolean
+  def private_use?(subtag), do: Registry.private_use?(subtag)
 end
