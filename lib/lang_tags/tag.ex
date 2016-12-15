@@ -6,6 +6,10 @@ defmodule LangTags.Tag do
   alias LangTags.Registry
   alias LangTags.SubTag
 
+  @doc """
+  Creates a new tag as a map
+  """
+  @spect new(String.t) :: map
   def new(tag) do
     # Lowercase for consistency (case is only a formatting
     # convention, not a standard requirement)
@@ -18,15 +22,29 @@ defmodule LangTags.Tag do
     end
   end
 
+  @doc """
+  If the tag is listed as *deprecated* or *redundant* it might have a preferred value. This method returns a tag as a map object if so.
+
+  ## Examples
+
+    iex> new("zh-cmn-Hant") |> preferred()
+    %{"Tag" => "cmn-hant"}
+  """
+  @spec preferred(map) :: String.t | nil
   def preferred(tag) do
     preferred = tag["Record"]["Preferred-Value"]
 
     if preferred, do: new(preferred), else: nil
   end
 
+  @doc """
+  Returns a list of subtags making up the tag, as `Subtag` maps.
+
+  Note that if the tag is *grandfathered* the result will be an empty list
+  """
+  @spec subtags(map) :: [map] | []
   def subtags(tag), do: process_subtags(tag, tag["Record"]["Type"])
 
-  # No subtags if the tag is grandfathered
   defp process_subtags(_tag, "grandfathered"), do: []
 
   defp process_subtags(tag, _) do
@@ -45,15 +63,35 @@ defmodule LangTags.Tag do
     Enum.reverse(subtags)
   end
 
+  @doc """
+  Shortcut for `find/2` with a `language` filter
+  """
+  @spec language(map) :: map
   def language(tag), do: find(tag, "language")
 
+  @doc """
+  Shortcut for `find/2` with a `region` filter
+  """
+  @spec region(map) :: map
   def region(tag), do: find(tag, "region")
 
+  @doc """
+  Shortcut for `find/2` with a `script` filter
+  """
+  @spec script(map) :: map
   def script(tag), do: find(tag, "script")
 
+  @doc """
+  Find a subtag of the given type from those making up the tag.
+  """
+  @spec find(map) :: map
   def find(tag, filter), do: Enum.find(subtags(tag), &(type(&1) == filter))
 
-  def valid(tag) do
+  @doc """
+  Returns `true` if the tag is valid, `false` otherwise.
+  """
+  @spec valid?(map) :: boolean
+  def valid?(tag) do
     errors(tag) == []
   end
 
@@ -77,16 +115,50 @@ defmodule LangTags.Tag do
        end)
   end
 
+  # FIXME: Review section 2.2.8, implementation does not match with docs.
+  @doc """
+  Returns `grandfathered` if the tag is grandfathered, `redundant` if the tag is redundant, and `tag` if neither.
+
+  For a definition of grandfathered and redundant tags, see [RFC 5646 section 2.2.8](http://tools.ietf.org/html/rfc5646#section-2.2.8).
+  """
+  @spec type(map) :: String.t
   def type(tag), do: tag["Record"]["Type"] || "tag"
 
+  @doc """
+  For grandfathered or redundant tags, returns a date string reflecting the date the tag was added to the registry.
+  """
+  @spec added(map) :: String.t | nil
   def added(tag), do: tag["Record"]["Added"]
 
+  @doc """
+  For grandfathered or redundant tags, returns a date string reflecting the deprecation date if the tag is deprecated.
+
+  ## Examples
+
+    iex> new("zh-cmn-Hant") |> deprecated()
+    "2009-07-29"
+
+  """
+  @spec deprecated(map) :: String.t | nil
   def deprecated(tag), do: tag["Record"]["Deprecated"]
 
+  @doc """
+  Returns a list of tag descriptions for grandfathered or redundant tags, otherwise returns an empty list.
+  """
+  @spec descriptions(map) :: String.t | []
   def descriptions(tag), do: tag["Record"]["Description"] || []
 
+  @doc """
+  Format a tag according to the case conventions defined in [RFC 5646 section 2.1.1](http://tools.ietf.org/html/rfc5646#section-2.1.1).
+
+  ## Examples
+
+    iex> new("en-gb") |> format()
+    "en-GB"
+
+  """
+  @spec format(map) :: String.t
   def format(tag) do
-    # Format according to algorithm defined in RFC 5646 section 2.1.1.
     (tag["Tag"])
     |> String.split("-")
     |> Enum.with_index()
@@ -98,6 +170,7 @@ defmodule LangTags.Tag do
   end
 
   ## Helpers
+  @doc false
   def find_subtag(code, type) do
     try do
       SubTag.new(code, type)
