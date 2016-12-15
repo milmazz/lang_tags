@@ -60,7 +60,7 @@ defmodule LangTags.SubTagTest do
     assert type(script) == "script"
     assert format(script) == "Latn"
 
-    # Should return null if no script.
+    # Should return nil if no script.
     # A macrolanguage like 'zh' should have no suppress-script.
     subtag = new("zh", "language")
     script = script(subtag)
