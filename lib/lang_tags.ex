@@ -33,17 +33,15 @@ defmodule LangTags do
   ["extlang", "language"]
   iex> LangTags.types("dummy")
   []
+  iex> LangTags.types("art-lojban", true)
+  ["grandfathered"]
 
   """
   @spec types(String.t) :: [String.t] | []
   def types(subtag, all \\ false) do
-    type_info = Registry.types()[subtag]
+    type_info = Registry.types(subtag)
 
-    if is_map(type_info) do
-      type_info |> MapSet.to_list() |> process_types(all)
-    else
-      []
-    end
+    if type_info == [], do: [], else: process_types(type_info, all)
   end
 
   defp process_types(type_info, true), do: type_info
@@ -59,12 +57,10 @@ defmodule LangTags do
   Calling `LangTags.subtags("mt")` will return an array with 2 subtag maps: one for Malta (the 'region' type subtag) and
   one for Maltese (the 'language' type subtag).
 
-
     iex> LangTags.subtags("mt")
-    # [Subtag, Subtag]
+    LangTags.subtags("mt")
     iex> LangTags.subtags("bumblebee")
     []
-
 
   To get or check a single subtag by type use `language/1`, `region/1` or `type/2`.
   """
@@ -78,7 +74,7 @@ defmodule LangTags do
   ## Examples
 
     iex> LangTags.filter(["en", "Aargh"])
-      ['Aargh']
+    ["Aargh"]
 
   """
   def filter(_subtags) do
@@ -109,7 +105,7 @@ defmodule LangTags do
   ## Examples
 
   iex> LangTags.languages("zh")
-  # [Subtag, Subtag...]
+  LangTags.languages("zh")
   iex> LangTags.languages("en");
   Error: 'en' is not a valid macrolanguage.
 
@@ -124,8 +120,8 @@ defmodule LangTags do
   ## Examples
 
     iex> LangTags.language("en")
-    # Subtag
-    iex> tags.language("us")
+    LangTags.language("en")
+    iex> LangTags.language("us")
     nil
 
   """
@@ -138,7 +134,7 @@ defmodule LangTags do
   ## Examples
 
     iex> LangTags.region("mt")
-    # Subtag
+    LangTags.region("mt")
     iex> LangTags.region("en");
     nil
 
@@ -156,7 +152,7 @@ defmodule LangTags do
   ## Examples
 
     iex> LangTags.type("zh", "language")
-    # SubTag
+    LangTags.type("zh", "language")
     iex> LangTags.type("zh", "script")
     nil
 
