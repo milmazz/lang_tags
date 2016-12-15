@@ -9,7 +9,7 @@ defmodule LangTags.Tag do
   @doc """
   Creates a new tag as a map
   """
-  @spect new(String.t) :: map
+  @spec new(String.t) :: map
   def new(tag) do
     # Lowercase for consistency (case is only a formatting
     # convention, not a standard requirement)
@@ -84,7 +84,7 @@ defmodule LangTags.Tag do
   @doc """
   Find a subtag of the given type from those making up the tag.
   """
-  @spec find(map) :: map
+  @spec find(map, String.t) :: map
   def find(tag, filter), do: Enum.find(subtags(tag), &(type(&1) == filter))
 
   @doc """
