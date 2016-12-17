@@ -36,19 +36,13 @@ defmodule LangTagsTest do
     refute L.language("GB")
   end
 
-  @tag :skip
   test "languages/1 returns all languages for macrolanguage" do
     subtags = "zh" |> L.languages()
     assert subtags |> Enum.count() > 0
 
-    # try {
-    #   assert tags.languages("en"))
-    # } catch (e) {
-    #   err = e
-    # }
-
-    # assert(err)
-    # assert err.message, "\"en\" is not a macrolanguage.")
+    assert_raise ArgumentError, ~r/is not a valid macrolanguage./, fn ->
+      LangTags.languages("en")
+    end
   end
 
   @tag :skip
@@ -76,17 +70,16 @@ defmodule LangTagsTest do
     assert subtags |> List.first() |> ST.format() == "prs"
     end
 
-  @tag :skip
   test "subtags/1 returns subtags" do
     subtags = "whatever" |>  L.subtags()
     assert subtags == []
 
     subtags = L.subtags("mt")
     assert subtags |> Enum.count() == 2
-    assert subtags |> List.first() |> L.type() == "language"
-    assert subtags |> List.first() |> L.format() == "mt"
-    assert subtags |> Enum.at(1) |> L.type() == "region"
-    assert subtags |> Enum.at(1) |> L.format() == "MT"
+    assert subtags |> List.first() |> ST.type() == "language"
+    assert subtags |> List.first() |> ST.format() == "mt"
+    assert subtags |> Enum.at(1) |> ST.type() == "region"
+    assert subtags |> Enum.at(1) |> ST.format() == "MT"
   end
 
   @tag :skip
@@ -95,10 +88,9 @@ defmodule LangTagsTest do
     refute L.check("mo")
   end
 
-#  test "gets tag" do
-#    tag = tags("en")
-#
-#    tag = tags("en-gb")
-#    assert tag |> L.format() == "en-GB"
-#  end
+ test "gets tag" do
+   assert L.tags("en") == %{"Tag" => "en"}
+
+   assert L.tags("en-gb") |> LangTags.Tag.format() == "en-GB"
+ end
 end

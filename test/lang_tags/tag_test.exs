@@ -129,7 +129,7 @@ defmodule LangTags.TagTest do
 
   @tag :skip
   test "valid?/1 returns false for deprecated grandfathered tag" do
-  # Grandfathered and deprecated, therefore invalid.
+    # Grandfathered and deprecated, therefore invalid.
     tag = "art-lojban" |> new()
     assert tag |> type() == "grandfathered"
     assert tag |> deprecated()

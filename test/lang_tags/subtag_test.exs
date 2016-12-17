@@ -49,7 +49,7 @@ defmodule LangTags.SubTagTest do
 
     # Should return nil if no preferred value.
     # Latin America and the Caribbean
-    subtag = new("419", "region");
+    subtag = new("419", "region")
     refute preferred(subtag)
   end
 
@@ -70,8 +70,8 @@ defmodule LangTags.SubTagTest do
   test "scope/1 returns scope" do
     assert new("zh", "language") |> scope() == "macrolanguage"
     assert new("nah", "language") |> scope() == "collection"
-    refute new("en", "language") |> scope()
-    refute new("IQ", "region") |> scope()
+    assert new("en", "language") |> scope() == "individual"
+    assert new("IQ", "region") |> scope() == "individual"
   end
 
   test "deprecated/1 returns deprecation date if available" do
