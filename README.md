@@ -6,7 +6,7 @@ This project will be updated as the standards change.
 
 ## Installation
 
-If [available in Hex][Hex], the package can be installed as:
+If [available in Hex][Hex], the package can be installed as
 
   1. Add `lang_tags` to your list of dependencies in `mix.exs`:
 
@@ -18,10 +18,8 @@ If [available in Hex][Hex], the package can be installed as:
 
   2. Ensure `lang_tags` is started before your application:
 
-    ```elixir
-    def application do
-      [applications: [:lang_tags]]
-    end
+    ```console
+    $ mix deps.get
     ```
 
 The docs can be found at [https://hexdocs.pm/lang_tags](https://hexdocs.pm/lang_tags)
@@ -30,3 +28,7 @@ The docs can be found at [https://hexdocs.pm/lang_tags](https://hexdocs.pm/lang_
 [RFC 5646]: http://tools.ietf.org/html/rfc5646
 [Registry]: http://www.iana.org/assignments/language-subtag-registry
 [Hex]: https://hex.pm/docs/publish
+
+## Javascript version
+
+This project is a Elixir version of the [language-tags](https://github.com/mattcg/language-tags) Javascript project.
