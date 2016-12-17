@@ -3,18 +3,19 @@ defmodule LangTags do
   Language Tags
   """
 
-  alias LangTags.{Registry,Tag}
+  alias LangTags.{Registry,Tag,SubTag}
 
   @spec tags(String.t) :: map
   def tags(tag), do: Tag.new(tag)
 
   @doc """
-  Shortcut for `LangTags.Tag.valid?/1`. Return `true` if the tag is valid, `false` otherwise.
+  Shortcut for `LangTags.Tag.valid?/1`. Returns `true` if the tag is valid, `false` otherwise.
 
   For meaningful error output see `errors/1`.
   """
-  @spec check(map) :: boolean
-  def check(tag), do: Tag.valid?(tag)
+  @spec check(map | String.t) :: boolean
+  def check(tag) when is_map(tag), do: Tag.valid?(tag)
+  def check(tag) when is_binary(tag), do: tag |> tags() |> check()
 
   @doc """
   Look up for one or more types for the given string.
@@ -31,7 +32,7 @@ defmodule LangTags do
   ["language"]
   iex> LangTags.types("xml")
   ["extlang", "language"]
-  iex> LangTags.types("dummy")
+  iex> LangTags.types("art-lojban")
   []
   iex> LangTags.types("art-lojban", true)
   ["grandfathered"]
@@ -39,7 +40,7 @@ defmodule LangTags do
   """
   @spec types(String.t) :: [String.t] | []
   def types(subtag, all \\ false) do
-    type_info = Registry.types(subtag)
+    type_info = subtag |> String.downcase() |> Registry.types()
 
     if type_info == [], do: [], else: process_types(type_info, all)
   end
@@ -54,18 +55,29 @@ defmodule LangTags do
 
   ## Examples
 
-  Calling `LangTags.subtags("mt")` will return an array with 2 subtag maps: one for Malta (the 'region' type subtag) and
-  one for Maltese (the 'language' type subtag).
+  Calling `LangTags.subtags("mt")` will return an array with 2 subtag maps: one
+  for Malta (the 'region' type subtag) and one for Maltese (the 'language' type
+  subtag).
 
     iex> LangTags.subtags("mt")
     LangTags.subtags("mt")
+    iex> LangTags.subtags(["mt", "ca"])
+    LangTags.subtags(["mt", "ca"])
     iex> LangTags.subtags("bumblebee")
     []
 
-  To get or check a single subtag by type use `language/1`, `region/1` or `type/2`.
+  To get or check a single subtag by type use `language/1`, `region/1` or
+  `type/2`.
   """
-  def subtags(_subtags) do
-    # TODO: Implement
+  @spec subtags(String.t | [String.t]) :: [map]
+  def subtags(key) when is_binary(key), do: subtags([key])
+  def subtags(keys) when is_list(keys) do
+    Enum.flat_map(keys, fn(key) ->
+      key
+      |> String.downcase()
+      |> types()
+      |> Enum.map(fn(type) -> SubTag.new(key, type) end)
+    end)
   end
 
   @doc """
@@ -77,28 +89,32 @@ defmodule LangTags do
     ["Aargh"]
 
   """
-  def filter(_subtags) do
-    # TODO: Implement
+  @spec filter(String.t | [String.t]) :: [String.t]
+  def filter(subtag) when is_binary(subtag), do: filter([subtag])
+  def filter(subtags) when is_list(subtags) do
+    Enum.filter(subtags, fn(key) ->
+      key |> String.downcase() |> types() == []
+    end)
   end
 
+  # @doc """
+  # Search for tags and subtags by description.
+
+  # Supports either a RegExp or a string for `description`. Returns a list
+  # of `Subtag` and `Tag` maps or an empty list if no results were found.
+
+  # Note that `Tag` map in the results represent 'grandfathered' or 'redundant'
+  # tags. These are excluded by default. Set the `all` parameter to `true`
+  # to include them.
+
+  # Search is case-insensitive if `description` is a string.
+  # """
+  # def search(_query, _all) do
+  #   # TODO: Implement
+  # end
+
   @doc """
-  Search for tags and subtags by description.
-
-  Supports either a RegExp or a string for `description`. Returns a list
-  of `Subtag` and `Tag` maps or an empty list if no results were found.
-
-  Note that `Tag` map in the results represent 'grandfathered' or 'redundant'
-  tags. These are excluded by default. Set the `all` parameter to `true`
-  to include them.
-
-  Search is case-insensitive if `description` is a string.
-  """
-  def search(_query, _all) do
-    # TODO: Implement
-  end
-
-  @doc """
-  Returns alist  of subtag maps representing all the *language* type subtags belonging to the given *macrolanguage* type subtag.
+  Returns a list of subtag maps representing all the *language* type subtags belonging to the given *macrolanguage* type subtag.
 
   Throws an error if `macrolanguage` is not a macrolanguage.
 
@@ -106,12 +122,23 @@ defmodule LangTags do
 
   iex> LangTags.languages("zh")
   LangTags.languages("zh")
-  iex> LangTags.languages("en");
-  Error: 'en' is not a valid macrolanguage.
+  iex> LangTags.languages("en")
+  ** (ArgumentError) 'en' is not a valid macrolanguage.
 
   """
-  def languages(_macrolanguage) do
-    # TODO: Implement
+  @spec languages(String.t) :: [map] | Exception.t
+  def languages(macrolanguage) do
+    macrolanguage = String.downcase(macrolanguage)
+
+    if SubTag.macrolanguage?(macrolanguage) do
+      macrolanguage
+      |> Registry.macrolanguages()
+      |> Enum.reduce([], fn({subtag, type}, acc) ->
+           [SubTag.new(subtag, type) | acc]
+         end)
+    else
+      raise(ArgumentError, "'#{macrolanguage}' is not a valid macrolanguage.")
+    end
   end
 
   @doc """
@@ -135,7 +162,7 @@ defmodule LangTags do
 
     iex> LangTags.region("mt")
     LangTags.region("mt")
-    iex> LangTags.region("en");
+    iex> LangTags.region("en")
     nil
 
   """
@@ -159,8 +186,7 @@ defmodule LangTags do
   """
   @spec type(String.t, String.t) :: map | nil
   def type(subtag, type) when type in ["language", "extlang", "script", "region", "variant"] do
-    subtag = String.downcase(subtag)
-    Tag.find_subtag(subtag, type)
+    SubTag.find(subtag, type)
   end
 
   @doc """
