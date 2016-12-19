@@ -164,6 +164,14 @@ defmodule LangTags.SubTag do
   For subtags of type *language* or *extlang*, returns a `Subtag` map
   representing the language's default script. See [RFC 5646 section 3.1.9](http://tools.ietf.org/html/rfc5646#section-3.1.9)
   for a definition of *Suppress-Script*.
+
+  ## Examples
+
+      iex> LangTags.language("af") |> LangTags.SubTag.script()
+      LangTags.SubTag.new("Latn", "script")
+      iex> LangTags.language("ae") |> LangTags.SubTag.script()
+      nil
+
   """
   @spec script(map) :: map | nil
   def script(subtag) when is_map(subtag) do
