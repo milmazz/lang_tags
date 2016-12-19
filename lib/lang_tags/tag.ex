@@ -7,6 +7,15 @@ defmodule LangTags.Tag do
 
   @doc """
   Creates a new tag as a map
+
+  ## Examples
+
+      iex> LangTags.Tag.new("en-gb-oed")
+      %{"Record" => %{"Added" => "2003-07-09", "Deprecated" => "2015-04-17",
+          "Description" => ["English, Oxford English Dictionary spelling"],
+          "Preferred-Value" => "en-GB-oxendict", "Tag" => "en-gb-oed",
+          "Type" => "grandfathered"}, "Tag" => "en-gb-oed"}
+
   """
   @spec new(String.t) :: map
   def new(tag) do
@@ -26,9 +35,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> preferred("art-lojban")
-      %{"Tag" => "jbo"}
-      iex> "zh-cmn-Hant" |> new() |> preferred()
+      iex> LangTags.Tag.preferred("i-klingon")
+      %{"Tag" => "tlh"}
+      iex> "zh-cmn-Hant" |> LangTags.Tag.new() |> LangTags.Tag.preferred()
       %{"Tag" => "cmn-hant"}
 
   """
@@ -44,6 +53,14 @@ defmodule LangTags.Tag do
   Returns a list of subtags making up the tag, as `Subtag` maps.
 
   Note that if the tag is *grandfathered* the result will be an empty list
+
+  ## Examples
+
+      iex> LangTags.Tag.subtags("en-gb-oed")
+      []
+      iex> LangTags.Tag.subtags("az-arab")
+      LangTags.Tag.subtags("az-arab")
+
   """
   @spec subtags(map | String.t) :: [map] | []
   def subtags(tag) when is_map(tag), do: process_subtags(tag, tag["Record"]["Type"])
@@ -51,6 +68,14 @@ defmodule LangTags.Tag do
 
   @doc """
   Shortcut for `find/2` with a `language` filter
+
+  ## Examples
+
+      iex> LangTags.Tag.language("az-arab")
+      %{"Record" => %{"Added" => "2005-10-16", "Description" => ["Azerbaijani"],
+        "Scope" => "macrolanguage", "Subtag" => "az", "Type" => "language"},
+        "Subtag" => "az"}
+
   """
   @spec language(map | String.t) :: map
   def language(tag) when is_map(tag), do: find(tag, "language")
@@ -58,6 +83,12 @@ defmodule LangTags.Tag do
 
   @doc """
   Shortcut for `find/2` with a `region` filter
+
+  ## Examples
+
+      iex> LangTags.Tag.region("en-gb-oeb")["Record"]["Description"] == ["United Kingdom"]
+      true
+
   """
   @spec region(map | String.t) :: map
   def region(tag) when is_map(tag), do: find(tag, "region")
@@ -65,6 +96,13 @@ defmodule LangTags.Tag do
 
   @doc """
   Shortcut for `find/2` with a `script` filter
+
+  ## Examples
+
+      iex> LangTags.Tag.script("az-arab")
+      %{"Record" => %{"Added" => "2005-10-16", "Description" => ["Arabic"],
+        "Subtag" => "arab", "Type" => "script"}, "Subtag" => "arab"}
+
   """
   @spec script(map | String.t) :: map
   def script(tag) when is_map(tag), do: find(tag, "script")
@@ -72,6 +110,13 @@ defmodule LangTags.Tag do
 
   @doc """
   Find a subtag of the given type from those making up the tag.
+
+  ## Examples
+
+      iex> LangTags.Tag.find("az-arab", "script")
+      %{"Record" => %{"Added" => "2005-10-16", "Description" => ["Arabic"],
+        "Subtag" => "arab", "Type" => "script"}, "Subtag" => "arab"}
+
   """
   @spec find(map | String.t, String.t) :: map
   def find(tag, filter) when is_map(tag), do: Enum.find(subtags(tag), &(type(&1) == filter))
@@ -140,9 +185,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> type("art-lojban")
+      iex> LangTags.Tag.type("art-lojban")
       "grandfathered"
-      iex> type("az-Arab")
+      iex> LangTags.Tag.type("az-Arab")
       "redundant"
 
   """
@@ -155,9 +200,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> grandfathered?("zh-xiang")
+      iex> LangTags.Tag.grandfathered?("zh-xiang")
       true
-      iex> grandfathered?("az-Arab")
+      iex> LangTags.Tag.grandfathered?("az-Arab")
       false
 
   """
@@ -169,9 +214,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> redundant?("az-Arab")
+      iex> LangTags.Tag.redundant?("az-Arab")
       true
-      iex> redundant?("zh-xiang")
+      iex> LangTags.Tag.redundant?("zh-xiang")
       false
 
   """
@@ -183,7 +228,7 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> added("cel-gaulish")
+      iex> LangTags.Tag.added("cel-gaulish")
       "2001-05-25"
 
   """
@@ -196,9 +241,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> deprecated("art-lojban")
+      iex> LangTags.Tag.deprecated("art-lojban")
       "2003-09-02"
-      iex> "zh-cmn-Hant" |> new() |> deprecated()
+      iex> "zh-cmn-Hant" |> LangTags.Tag.new() |> LangTags.Tag.deprecated()
       "2009-07-29"
 
   """
@@ -211,7 +256,7 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> descriptions("art-lojban")
+      iex> LangTags.Tag.descriptions("art-lojban")
       ["Lojban"]
 
   """
@@ -224,9 +269,9 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-      iex> format("en-gb-oed")
+      iex> LangTags.Tag.format("en-gb-oed")
       "en-GB-oed"
-      iex> "en-gb" |> new() |> format()
+      iex> "en-gb" |> LangTags.Tag.new() |> LangTags.Tag.format()
       "en-GB"
 
   """
