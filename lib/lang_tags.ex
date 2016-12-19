@@ -28,14 +28,14 @@ defmodule LangTags do
 
   ## Examples
 
-  iex> LangTags.types("en")
-  ["language"]
-  iex> LangTags.types("xml")
-  ["extlang", "language"]
-  iex> LangTags.types("art-lojban")
-  []
-  iex> LangTags.types("art-lojban", true)
-  ["grandfathered"]
+      iex> LangTags.types("en")
+      ["language"]
+      iex> LangTags.types("xml")
+      ["extlang", "language"]
+      iex> LangTags.types("art-lojban")
+      []
+      iex> LangTags.types("art-lojban", true)
+      ["grandfathered"]
 
   """
   @spec types(String.t) :: [String.t] | []
@@ -59,12 +59,12 @@ defmodule LangTags do
   for Malta (the 'region' type subtag) and one for Maltese (the 'language' type
   subtag).
 
-    iex> LangTags.subtags("mt")
-    LangTags.subtags("mt")
-    iex> LangTags.subtags(["mt", "ca"])
-    LangTags.subtags(["mt", "ca"])
-    iex> LangTags.subtags("bumblebee")
-    []
+      iex> LangTags.subtags("mt")
+      LangTags.subtags("mt")
+      iex> LangTags.subtags(["mt", "ca"])
+      LangTags.subtags(["mt", "ca"])
+      iex> LangTags.subtags("bumblebee")
+      []
 
   To get or check a single subtag by type use `language/1`, `region/1` or
   `type/2`.
@@ -85,8 +85,8 @@ defmodule LangTags do
 
   ## Examples
 
-    iex> LangTags.filter(["en", "Aargh"])
-    ["Aargh"]
+      iex> LangTags.filter(["en", "Aargh"])
+      ["Aargh"]
 
   """
   @spec filter(String.t | [String.t]) :: [String.t]
@@ -120,10 +120,10 @@ defmodule LangTags do
 
   ## Examples
 
-  iex> LangTags.languages("zh")
-  LangTags.languages("zh")
-  iex> LangTags.languages("en")
-  ** (ArgumentError) 'en' is not a valid macrolanguage.
+      iex> LangTags.languages("zh")
+      LangTags.languages("zh")
+      iex> LangTags.languages("en")
+      ** (ArgumentError) 'en' is not a valid macrolanguage.
 
   """
   @spec languages(String.t) :: [map] | Exception.t
@@ -146,10 +146,10 @@ defmodule LangTags do
 
   ## Examples
 
-    iex> LangTags.language("en")
-    LangTags.language("en")
-    iex> LangTags.language("us")
-    nil
+      iex> LangTags.language("en")
+      LangTags.language("en")
+      iex> LangTags.language("us")
+      nil
 
   """
   @spec language(String.t) :: map | nil
@@ -160,14 +160,28 @@ defmodule LangTags do
 
   ## Examples
 
-    iex> LangTags.region("mt")
-    LangTags.region("mt")
-    iex> LangTags.region("en")
-    nil
+      iex> LangTags.region("mt")
+      LangTags.region("mt")
+      iex> LangTags.region("en")
+      nil
 
   """
   @spec region(String.t) :: map | nil
   def region(subtag), do: type(subtag, "region")
+
+  @doc """
+  As `language/1`, but with *script* type subtags.
+
+  ## Examples
+
+      iex> LangTags.script("aghb")
+      LangTags.script("aghb")
+      iex> LangTags.script("en")
+      nil
+
+  """
+  @spec script(String.t) :: map | nil
+  def script(subtag), do: type(subtag, "script")
 
   @doc """
   Get a subtag by type. Returns the subtag matching `type` as a subtag map otherwise returns `nil`.
@@ -178,10 +192,10 @@ defmodule LangTags do
 
   ## Examples
 
-    iex> LangTags.type("zh", "language")
-    LangTags.type("zh", "language")
-    iex> LangTags.type("zh", "script")
-    nil
+      iex> LangTags.type("zh", "language")
+      LangTags.type("zh", "language")
+      iex> LangTags.type("zh", "script")
+      nil
 
   """
   @spec type(String.t, String.t) :: map | nil
