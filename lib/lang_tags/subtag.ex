@@ -31,8 +31,10 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-      iex> LangTags.SubTag.find("ef", "language")
-      LangTags.language("ef")
+      iex> LangTags.SubTag.find("tlh", "language")
+      %{"Record" => %{"Added" => "2005-10-16",
+          "Description" => ["Klingon", "tlhIngan-Hol"], "Subtag" => "tlh",
+          "Type" => "language"}, "Subtag" => "tlh"}
       iex> LangTags.SubTag.find("ef", "script")
       nil
 
@@ -143,8 +145,8 @@ defmodule LangTags.SubTag do
       # `ro` is preferred over deprecated `mo`.
       iex> LangTags.language("mo") |> LangTags.SubTag.preferred()
       %{"Record" => %{"Added" => "2005-10-16",
-      "Description" => ["Romanian", "Moldavian", "Moldovan"], "Subtag" => "ro",
-      "Suppress-Script" => "Latn", "Type" => "language"}, "Subtag" => "ro"}
+          "Description" => ["Romanian", "Moldavian", "Moldovan"], "Subtag" => "ro",
+          "Suppress-Script" => "Latn", "Type" => "language"}, "Subtag" => "ro"}
 
   """
   @spec preferred(map) :: map | nil
@@ -167,8 +169,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-      iex> LangTags.language("af") |> LangTags.SubTag.script()
-      LangTags.SubTag.new("Latn", "script")
+      iex> LangTags.language("af") |> LangTags.SubTag.script() == LangTags.SubTag.new("Latn", "script")
+      true
       iex> LangTags.language("ae") |> LangTags.SubTag.script()
       nil
 
