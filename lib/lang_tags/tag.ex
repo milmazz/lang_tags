@@ -17,7 +17,7 @@ defmodule LangTags.Tag do
     try do
       %{"Tag" => tag, "Record" => Registry.tag(tag)}
     rescue
-      RuntimeError -> %{"Tag" => tag}
+      ArgumentError -> %{"Tag" => tag}
     end
   end
 
@@ -26,13 +26,13 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> preferred("art-lojban")
-    %{"Tag" => "jbo"}
-    iex> "zh-cmn-Hant" |> new() |> preferred()
-    %{"Tag" => "cmn-hant"}
+      iex> preferred("art-lojban")
+      %{"Tag" => "jbo"}
+      iex> "zh-cmn-Hant" |> new() |> preferred()
+      %{"Tag" => "cmn-hant"}
 
   """
-  @spec preferred(map | String.t) :: String.t | nil
+  @spec preferred(map | String.t) :: map | nil
   def preferred(tag) when is_binary(tag), do: tag |> new() |> preferred()
   def preferred(tag) when is_map(tag) do
     preferred = tag["Record"]["Preferred-Value"]
@@ -48,24 +48,6 @@ defmodule LangTags.Tag do
   @spec subtags(map | String.t) :: [map] | []
   def subtags(tag) when is_map(tag), do: process_subtags(tag, tag["Record"]["Type"])
   def subtags(tag) when is_binary(tag), do: tag |> new() |> subtags()
-
-  defp process_subtags(_tag, "grandfathered"), do: []
-
-  defp process_subtags(tag, _) do
-    codes = tag["Tag"] |> String.split("-") |> Enum.with_index()
-
-    subtags =
-      Enum.reduce_while(codes, [], fn({code, index}, subtags) ->
-        # Singletons and anything after are unhandled.
-        if String.length(code) < 2 do
-          {:halt, subtags} # Stop the loop (stop processing after a singleton).
-        else
-          subtags = process_subtag_by_index(index, code, subtags)
-          {:cont, subtags}
-        end
-      end)
-    Enum.reverse(subtags)
-  end
 
   @doc """
   Shortcut for `find/2` with a `language` filter
@@ -141,14 +123,13 @@ defmodule LangTags.Tag do
 
       # Check that first tag is a language tag.
       subtags = subtags(tag)
-      errors =
-        if subtags |> List.first() |> SubTag.type() == "language" do
-          ["ERR_NO_LANGUAGE" | errors]
-        else
-           # TODO: Check for more than one of some types and for deprecation.
-           # TODO: Check for correct order.
-          errors
-        end
+      if subtags |> List.first() |> SubTag.type() == "language" do
+        ["ERR_NO_LANGUAGE" | errors]
+      else
+         # TODO: Check for more than one of some types and for deprecation.
+         # TODO: Check for correct order.
+        errors
+      end
     end
   end
 
@@ -159,10 +140,10 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> type("art-lojban")
-    "grandfathered"
-    iex> type("az-Arab")
-    "redundant"
+      iex> type("art-lojban")
+      "grandfathered"
+      iex> type("az-Arab")
+      "redundant"
 
   """
   @spec type(map | String.t) :: String.t
@@ -174,10 +155,10 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> grandfathered?("zh-xiang")
-    true
-    iex> grandfathered?("az-Arab")
-    false
+      iex> grandfathered?("zh-xiang")
+      true
+      iex> grandfathered?("az-Arab")
+      false
 
   """
   @spec grandfathered?(String.t) :: boolean
@@ -188,10 +169,10 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> redundant?("az-Arab")
-    true
-    iex> redundant?("zh-xiang")
-    false
+      iex> redundant?("az-Arab")
+      true
+      iex> redundant?("zh-xiang")
+      false
 
   """
   @spec redundant?(String.t) :: boolean
@@ -202,8 +183,8 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> added("cel-gaulish")
-    "2001-05-25"
+      iex> added("cel-gaulish")
+      "2001-05-25"
 
   """
   @spec added(map | String.t) :: String.t | nil
@@ -215,10 +196,10 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> deprecated("art-lojban")
-    "2003-09-02"
-    iex> "zh-cmn-Hant" |> new() |> deprecated()
-    "2009-07-29"
+      iex> deprecated("art-lojban")
+      "2003-09-02"
+      iex> "zh-cmn-Hant" |> new() |> deprecated()
+      "2009-07-29"
 
   """
   @spec deprecated(map | String.t) :: String.t | nil
@@ -230,8 +211,8 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> descriptions("art-lojban")
-    ["Lojban"]
+      iex> descriptions("art-lojban")
+      ["Lojban"]
 
   """
   @spec descriptions(map | String.t) :: String.t | []
@@ -243,10 +224,10 @@ defmodule LangTags.Tag do
 
   ## Examples
 
-    iex> format("en-gb-oed")
-    "en-GB-oed"
-    iex> "en-gb" |> new() |> format()
-    "en-GB"
+      iex> format("en-gb-oed")
+      "en-GB-oed"
+      iex> "en-gb" |> new() |> format()
+      "en-GB"
 
   """
   @spec format(map | String.t) :: String.t
@@ -263,10 +244,28 @@ defmodule LangTags.Tag do
   end
 
   ## Helpers
+  defp process_subtags(_tag, "grandfathered"), do: []
+
+  defp process_subtags(tag, _) do
+    codes = tag["Tag"] |> String.split("-") |> Enum.with_index()
+
+    subtags =
+      Enum.reduce_while(codes, [], fn({code, index}, subtags) ->
+        # Singletons and anything after are unhandled.
+        if String.length(code) < 2 do
+          {:halt, subtags} # Stop the loop (stop processing after a singleton).
+        else
+          subtags = process_subtag_by_index(index, code, subtags)
+          {:cont, subtags}
+        end
+      end)
+    Enum.reverse(subtags)
+  end
+
   defp format_by_index(0, value, _acc), do: [value]
 
   defp format_by_index(_index, value, acc) do
-    if (acc |> hd() |> String.length() == 1) do
+    if acc |> hd() |> String.length() == 1 do
       [value | acc]
     else
       format_by_string_length(acc, value)
