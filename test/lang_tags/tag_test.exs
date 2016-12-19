@@ -1,5 +1,6 @@
 defmodule LangTags.TagTest do
   use ExUnit.Case, async: true
+  doctest LangTags.Tag
 
   import LangTags.Tag, only: [added: 1, deprecated: 1, descriptions: 1,
                               format: 1, language: 1, new: 1, preferred: 1,
