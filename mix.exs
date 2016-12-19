@@ -24,6 +24,7 @@ defmodule LangTags.Mixfile do
 
   defp package do
     [licenses: ["Apache 2.0"],
+     maintainers: ["Milton Mazzarri"],
      links: %{"GitHub" => "https://github.com/milmazz/lang_tags",
               "Docs" => "https://hexdocs.pm/lang_tag"}]
   end
