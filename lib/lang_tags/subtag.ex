@@ -7,6 +7,14 @@ defmodule LangTags.SubTag do
 
   @doc """
   Creates a new subtag as a map
+
+  ## Examples
+
+      iex> LangTags.SubTag.new("es", "language")
+      LangTags.SubTag.new("es", "language")
+      iex> LangTags.SubTag.new("es", "script")
+      ** (ArgumentError) non-existent subtag 'es' of type 'script'.
+
   """
   @spec new(String.t, String.t) :: map
   def new(subtag, type) do
@@ -20,13 +28,21 @@ defmodule LangTags.SubTag do
 
   @doc """
   If found, returns a map for the given subtag, `nil` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.find("ef", "language")
+      LangTags.language("ef")
+      iex> LangTags.SubTag.find("ef", "script")
+      nil
+
   """
   @spec find(String.t, String.t) :: map | nil
   def find(subtag, type) do
     try do
       new(subtag, type)
     rescue
-      RuntimeError -> nil
+      ArgumentError -> nil
     end
   end
 
@@ -35,36 +51,74 @@ defmodule LangTags.SubTag do
 
   See [RFC 5646 section 2.2](http://tools.ietf.org/html/rfc5646#section-2.2) for
   type definitions.
+
+  ## Examples
+
+      iex> LangTags.language("af") |> LangTags.SubTag.type() == "language"
+      true
+
   """
   @spec type(map) :: String.t | nil
   def type(subtag) when is_map(subtag), do: subtag["Record"]["Type"]
 
   @doc """
   Returns `true` if subtag is of "language" type, `false` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.language?("af")
+      true
+
   """
   @spec language?(String.t) :: boolean
   def language?(subtag), do: Registry.language?(subtag)
 
   @doc """
   Returns `true` if subtag is of "extlang" type, `false` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.extlang?("acm")
+      true
+
   """
   @spec extlang?(String.t) :: boolean
   def extlang?(subtag), do: Registry.extlang?(subtag)
 
   @doc """
   Returns `true` if subtag is of "script" type, `false` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.script?("aghb")
+      true
+
   """
   @spec script?(String.t) :: boolean
   def script?(subtag), do: Registry.script?(subtag)
 
   @doc """
   Returns `true` if subtag is of "region" type, `false` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.region?("ad")
+      true
+      iex> LangTags.SubTag.region?("en")
+      false
+
   """
   @spec region?(String.t) :: boolean
   def region?(subtag), do: Registry.region?(subtag)
 
   @doc """
   Returns `true` if subtag is of "variant" type, `false` otherwise.
+
+  ## Examples
+
+      iex> LangTags.SubTag.variant?("1901")
+      true
+
   """
   @spec variant?(String.t) :: boolean
   def variant?(subtag), do: Registry.variant?(subtag)
@@ -74,8 +128,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.new("ro", "language") |> LangTags.SubTag.descriptions()
-    ["Romanian", "Moldavian", "Moldovan"]
+      iex> LangTags.language("ro") |> LangTags.SubTag.descriptions()
+      ["Romanian", "Moldavian", "Moldovan"]
 
   """
   @spec descriptions(map) :: String.t | nil
@@ -86,11 +140,11 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    # `ro` is preferred over deprecated `mo`.
-    iex> LangTags.SubTag.new("mo", "language") |> LangTags.SubTag.preferred()
-    %{"Record" => %{"Added" => "2005-10-16",
-    "Description" => ["Romanian", "Moldavian", "Moldovan"], "Subtag" => "ro",
-    "Suppress-Script" => "Latn", "Type" => "language"}, "Subtag" => "ro"}
+      # `ro` is preferred over deprecated `mo`.
+      iex> LangTags.language("mo") |> LangTags.SubTag.preferred()
+      %{"Record" => %{"Added" => "2005-10-16",
+      "Description" => ["Romanian", "Moldavian", "Moldovan"], "Subtag" => "ro",
+      "Suppress-Script" => "Latn", "Type" => "language"}, "Subtag" => "ro"}
 
   """
   @spec preferred(map) :: map | nil
@@ -121,12 +175,12 @@ defmodule LangTags.SubTag do
   @doc """
   Returns the subtag scope as a string, or "individual" if the subtag has no scope.
 
-    ## Examples
+  ## Examples
 
-    iex> LangTags.SubTag.new("zh", "language") |> LangTags.SubTag.scope()
-    "macrolanguage"
-    iex> LangTags.SubTag.new("nah", "language") |> LangTags.SubTag.scope()
-    "collection"
+      iex> LangTags.language("zh") |> LangTags.SubTag.scope()
+      "macrolanguage"
+      iex> LangTags.language("nah") |> LangTags.SubTag.scope()
+      "collection"
 
   """
   @spec scope(map) :: String.t
@@ -137,8 +191,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.new("in", "language") |> LangTags.SubTag.deprecated()
-    "1989-01-01"
+      iex> LangTags.language("in") |> LangTags.SubTag.deprecated()
+      "1989-01-01"
 
   """
   @spec deprecated(map) :: String.t | nil
@@ -149,8 +203,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.new("ja", "language") |> LangTags.SubTag.added()
-    "2005-10-16"
+      iex> LangTags.language("ja") |> LangTags.SubTag.added()
+      "2005-10-16"
 
   """
   @spec added(map) :: String.t | nil
@@ -161,8 +215,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.new("nmf", "language") |> LangTags.SubTag.comments()
-    ["see ntx"]
+      iex> LangTags.language("nmf") |> LangTags.SubTag.comments()
+      ["see ntx"]
 
   """
   @spec comments(map) :: [String.t] | []
@@ -178,12 +232,12 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.new("mn", "language") |> LangTags.SubTag.format()
-    "mn"
-    iex> LangTags.SubTag.new("cyrl", "script") |> LangTags.SubTag.format()
-    "Cyrl"
-    iex> LangTags.SubTag.new("mn", "region") |> LangTags.SubTag.format()
-    "MN"
+      iex> LangTags.language("mn") |> LangTags.SubTag.format()
+      "mn"
+      iex> LangTags.script("cyrl") |> LangTags.SubTag.format()
+      "Cyrl"
+      iex> LangTags.region("mn") |> LangTags.SubTag.format()
+      "MN"
 
   """
   @spec format(map) :: String.t
@@ -210,8 +264,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.collection?("cdd")
-    true
+      iex> LangTags.SubTag.collection?("cdd")
+      true
 
   """
   @spec collection?(String.t) :: boolean
@@ -225,8 +279,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.macrolanguage?("kpe")
-    true
+      iex> LangTags.SubTag.macrolanguage?("kpe")
+      true
 
   """
   @spec macrolanguage?(String.t) :: boolean
@@ -241,8 +295,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.special?("zxx")
-    true
+      iex> LangTags.SubTag.special?("zxx")
+      true
 
   """
   @spec special?(String.t) :: boolean
@@ -256,8 +310,8 @@ defmodule LangTags.SubTag do
 
   ## Examples
 
-    iex> LangTags.SubTag.private_use?("qaa..qtz")
-    true
+      iex> LangTags.SubTag.private_use?("qaa..qtz")
+      true
 
   """
   @spec private_use?(String.t) :: boolean
