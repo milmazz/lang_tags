@@ -5,6 +5,15 @@ defmodule LangTags do
 
   alias LangTags.{Registry,Tag,SubTag}
 
+  @doc """
+  Shortcut for `LangTags.Tag.new/1`
+
+  ## Examples
+
+      iex> LangTags.tags("art-lojban") == LangTags.Tag.new("art-lojban")
+      true
+
+  """
   @spec tags(String.t) :: map
   def tags(tag), do: Tag.new(tag)
 
@@ -59,10 +68,10 @@ defmodule LangTags do
   for Malta (the 'region' type subtag) and one for Maltese (the 'language' type
   subtag).
 
-      iex> LangTags.subtags("mt")
-      LangTags.subtags("mt")
-      iex> LangTags.subtags(["mt", "ca"])
-      LangTags.subtags(["mt", "ca"])
+      iex> for subtag <- LangTags.subtags("mt"), do: subtag["Record"]["Description"]
+      [["Maltese"], ["Malta"]]
+      iex> LangTags.subtags(["mt", "ca"]) |> Enum.count()
+      4
       iex> LangTags.subtags("bumblebee")
       []
 
@@ -120,8 +129,8 @@ defmodule LangTags do
 
   ## Examples
 
-      iex> LangTags.languages("zh")
-      LangTags.languages("zh")
+      iex> LangTags.languages("zh") |> Enum.count()
+      28
       iex> LangTags.languages("en")
       ** (ArgumentError) 'en' is not a valid macrolanguage.
 
@@ -147,7 +156,9 @@ defmodule LangTags do
   ## Examples
 
       iex> LangTags.language("en")
-      LangTags.language("en")
+      %{"Record" => %{"Added" => "2005-10-16", "Description" => ["English"],
+          "Subtag" => "en", "Suppress-Script" => "Latn", "Type" => "language"},
+        "Subtag" => "en"}
       iex> LangTags.language("us")
       nil
 
@@ -161,7 +172,8 @@ defmodule LangTags do
   ## Examples
 
       iex> LangTags.region("mt")
-      LangTags.region("mt")
+      %{"Record" => %{"Added" => "2005-10-16", "Description" => ["Malta"],
+          "Subtag" => "mt", "Type" => "region"}, "Subtag" => "mt"}
       iex> LangTags.region("en")
       nil
 
@@ -175,7 +187,9 @@ defmodule LangTags do
   ## Examples
 
       iex> LangTags.script("aghb")
-      LangTags.script("aghb")
+      %{"Record" => %{"Added" => "2012-11-01",
+          "Description" => ["Caucasian Albanian"], "Subtag" => "aghb",
+          "Type" => "script"}, "Subtag" => "aghb"}
       iex> LangTags.script("en")
       nil
 
@@ -192,8 +206,8 @@ defmodule LangTags do
 
   ## Examples
 
-      iex> LangTags.type("zh", "language")
-      LangTags.type("zh", "language")
+      iex> LangTags.type("zh", "language") == LangTags.language("zh")
+      true
       iex> LangTags.type("zh", "script")
       nil
 
@@ -205,6 +219,12 @@ defmodule LangTags do
 
   @doc """
   Returns the file date for the underlying data, as a string.
+
+  ## Examples
+
+      iex> LangTags.date() |> String.match?(~r/\\d{4}-\\d{2}-\\d{2}/)
+      true
+
   """
   @spec date() :: String.t
   def date, do: Registry.date()
