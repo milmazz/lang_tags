@@ -1,6 +1,9 @@
 defmodule LangTags.SubTag do
   @moduledoc """
-  Sub-tags
+  Subtags according to the [BCP47](https://tools.ietf.org/html/bcp47)
+
+  This module contains the subtags defined in the BCP47, the allowed *types*
+  for a subtag are: "language", "extlang", "script", "region", or variant.
   """
 
   alias LangTags.Registry

@@ -1,6 +1,11 @@
 defmodule LangTags.Tag do
   @moduledoc """
-  Tag
+  Tags registered according to the rules in [RFC3066](https://tools.ietf.org/html/rfc3066)
+
+  Please note that this *tags*  appears in records whose *type* is either 'grandfathered'
+   or 'redundant' and contains a tag registered under [RFC3066](https://tools.ietf.org/html/rfc3066).
+
+   For more information, see [section 2.2.8](https://tools.ietf.org/html/bcp47#section-2.2.8)
   """
 
   alias LangTags.{SubTag,Registry}

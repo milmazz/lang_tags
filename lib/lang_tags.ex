@@ -1,6 +1,13 @@
 defmodule LangTags do
   @moduledoc """
-  Language Tags
+  The Language Tag according to the [BCP47](https://tools.ietf.org/html/bcp47)
+
+  Language tags are used to help identify languages, whether spoken, written,
+  signed, or otherwise signaled, for the purpose of communication.  This
+  includes constructed and artificial languages but excludes languages not
+  intended primarily for human communication, such as programming languages.
+
+  For more information, see [BCP47](https://tools.ietf.org/html/bcp47)
   """
 
   alias LangTags.{Registry,Tag,SubTag}
