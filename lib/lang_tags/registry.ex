@@ -116,15 +116,15 @@ defmodule LangTags.Registry do
   end
 
   def subtag(subtag, type) when type in ["language", "extlang", "script", "region", "variant"] do
-    raise "non-existent subtag '#{subtag}' of type '#{type}'."
+    raise(ArgumentError, "non-existent subtag '#{subtag}' of type '#{type}'.")
   end
 
   def subtag(_subtag, type) when type in ["grandfathered", "redundant"] do
-    raise ~S{invalid type for subtag, expected: "language", "extlang", "script", "region" or "variant"}
+    raise(ArgumentError, ~S{invalid type for subtag, expected: "language", "extlang", "script", "region" or "variant"})
   end
 
   def subtag(subtag, _type) do
-    raise "non-existent subtag '#{subtag}'."
+    raise(ArgumentError, "non-existent subtag '#{subtag}'.")
   end
 
   ## Tags
@@ -138,7 +138,7 @@ defmodule LangTags.Registry do
   end
 
   def tag(tag) do
-    raise "non-existent tag '#{tag}'."
+    raise(ArgumentError, "non-existent tag '#{tag}'.")
   end
 
   ## Scopes
