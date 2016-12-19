@@ -283,7 +283,7 @@ defmodule LangTags.Tag do
   @spec format(map | String.t) :: String.t
   def format(tag) when is_binary(tag), do: tag |> new() |> format()
   def format(tag) when is_map(tag) do
-    (tag["Tag"])
+    tag["Tag"]
     |> String.split("-")
     |> Enum.with_index()
     |> Enum.reduce([], fn({value, index}, acc) ->
