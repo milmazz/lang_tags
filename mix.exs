@@ -1,9 +1,11 @@
 defmodule LangTags.Mixfile do
   use Mix.Project
 
+  @version "0.2.0-dev"
+
   def project do
     [app: :lang_tags,
-     version: "0.1.0",
+     version: @version,
      description: "Work with IANA language tags in Elixir (BCP47 / RFC5646)",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
@@ -25,7 +27,6 @@ defmodule LangTags.Mixfile do
   defp package do
     [licenses: ["Apache 2.0"],
      maintainers: ["Milton Mazzarri"],
-     links: %{"GitHub" => "https://github.com/milmazz/lang_tags",
-              "Docs" => "https://hexdocs.pm/lang_tags"}]
+     links: %{"GitHub" => "https://github.com/milmazz/lang_tags"}]
   end
 end
