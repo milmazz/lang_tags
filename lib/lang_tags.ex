@@ -282,6 +282,33 @@ defmodule LangTags do
   end
 
   @doc """
+  Returns every registered subtag of the given type, as `{code, type}` pairs.
+
+  A `type` consists of one of the following strings: *language*, *extlang*,
+  *script*, *region* or *variant*. Grandfathered and redundant records are
+  tags rather than subtags and are not returned.
+
+  Pairs come back in the order they appear in the registry, and include
+  deprecated subtags, which are still registered. Only the codes are
+  returned: pass one to `type/2` or `subtags/1` to read its full record,
+  so that listing the registry does not build every record up front.
+
+  ## Examples
+
+      iex> {"latn", "script"} in LangTags.all("script")
+      true
+      iex> LangTags.all("region") |> List.keyfind("gb", 0)
+      {"gb", "region"}
+      iex> LangTags.all("script") |> List.keyfind("en", 0)
+      nil
+
+  """
+  @spec all(String.t()) :: [{String.t(), String.t()}]
+  def all(type) when type in ["language", "extlang", "script", "region", "variant"] do
+    Enum.filter(Registry.subtag_keys(), fn {_code, subtag_type} -> subtag_type == type end)
+  end
+
+  @doc """
   Returns the file date for the underlying data, as a string.
 
   ## Examples
