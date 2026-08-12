@@ -63,12 +63,8 @@ jobs:
       - name: Compile without warnings
         run: mix compile --warnings-as-errors
 
-      # Advisory for now. Every current finding is in the unfinished valid?/1
-      # and search/1 code, including the TODO comments that legitimately track
-      # that work. Drop continue-on-error once issue #4 is closed.
       - name: Credo
         if: matrix.lint
-        continue-on-error: true
         run: mix credo --strict
 
       - name: Run tests

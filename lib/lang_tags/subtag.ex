@@ -44,11 +44,9 @@ defmodule LangTags.SubTag do
   """
   @spec find(String.t(), String.t()) :: map | nil
   def find(subtag, type) do
-    try do
-      new(subtag, type)
-    rescue
-      ArgumentError -> nil
-    end
+    new(subtag, type)
+  rescue
+    ArgumentError -> nil
   end
 
   @doc """
