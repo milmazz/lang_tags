@@ -147,9 +147,21 @@ defmodule LangTags.Registry do
   def redundant?(tag), do: "redundant" in types(String.downcase(tag))
 
   ## Subtags
-  @subtags Map.new(subtag_records, fn %{"Subtag" => key, "Type" => type} = record ->
-             {{key, type}, record}
-           end)
+  subtags =
+    Map.new(subtag_records, fn %{"Subtag" => key, "Type" => type} = record ->
+      {{key, type}, record}
+    end)
+
+  # The generated-clause version failed loudly on a duplicate {Subtag, Type}
+  # record: the second clause was unreachable, which --warnings-as-errors made
+  # fatal. Map.new/2 keeps whichever record comes last and says nothing, so a
+  # registry refresh that introduced a duplicate would silently drop data.
+  # Compare against the record count to keep the failure loud.
+  if map_size(subtags) != length(subtag_records) do
+    raise "priv/language-subtag-registry contains duplicate {Subtag, Type} records"
+  end
+
+  @subtags subtags
 
   @doc """
   Looks up a subtag record without raising when it is absent.
@@ -160,7 +172,7 @@ defmodule LangTags.Registry do
   @spec fetch_subtag(String.t(), String.t()) :: {:ok, map} | :error
   def fetch_subtag(subtag, type), do: Map.fetch(@subtags, {subtag, type})
 
-  @spec subtag(String.t(), String.t()) :: map | Exception.t()
+  @spec subtag(String.t(), String.t()) :: map
   def subtag(subtag, type) do
     case fetch_subtag(subtag, type) do
       {:ok, record} -> record
@@ -185,7 +197,14 @@ defmodule LangTags.Registry do
   end
 
   ## Tags
-  @tags Map.new(tag_records, fn %{"Tag" => key} = record -> {key, record} end)
+  tags = Map.new(tag_records, fn %{"Tag" => key} = record -> {key, record} end)
+
+  # Same duplicate guard as @subtags above.
+  if map_size(tags) != length(tag_records) do
+    raise "priv/language-subtag-registry contains duplicate Tag records"
+  end
+
+  @tags tags
 
   @doc """
   Looks up a tag record without raising when it is absent.
@@ -196,7 +215,7 @@ defmodule LangTags.Registry do
   @spec fetch_tag(String.t()) :: {:ok, map} | :error
   def fetch_tag(tag), do: Map.fetch(@tags, tag)
 
-  @spec tag(String.t()) :: map | Exception.t()
+  @spec tag(String.t()) :: map
   def tag(tag) do
     case fetch_tag(tag) do
       {:ok, record} -> record
@@ -208,8 +227,9 @@ defmodule LangTags.Registry do
   #
   # Records are accumulated by prepending, so they are reversed here to restore
   # the order they appear in the registry file. Only the keys are stored: the
-  # records themselves are already compiled into subtag/2 and tag/1, and
-  # duplicating their descriptions would roughly double the module's literals.
+  # records themselves already live in the @subtags and @tags literals behind
+  # fetch_subtag/2 and fetch_tag/1, and duplicating their descriptions would
+  # roughly double the module's literals.
   @subtag_keys subtag_records
                |> Enum.reverse()
                |> Enum.map(fn %{"Subtag" => key, "Type" => type} -> {key, type} end)
