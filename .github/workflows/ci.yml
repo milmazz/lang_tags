@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  MIX_ENV: test
+
+jobs:
+  test:
+    name: Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pairs verified against builds.hex.pm. The oldest entry matches the
+        # `elixir: "~> 1.15"` requirement in mix.exs.
+        include:
+          - elixir: "1.15"
+            otp: "26"
+          - elixir: "1.17"
+            otp: "27"
+          - elixir: "1.18"
+            otp: "28"
+          - elixir: "1.20"
+            otp: "29"
+            lint: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check formatting
+        if: matrix.lint
+        run: mix format --check-formatted
+
+      - name: Check for unused dependencies
+        if: matrix.lint
+        run: mix deps.unlock --check-unused
+
+      - name: Compile without warnings
+        run: mix compile --warnings-as-errors
+
+      # Advisory for now. Every current finding is in the unfinished valid?/1
+      # and search/1 code, including the TODO comments that legitimately track
+      # that work. Drop continue-on-error once that issue is closed.
+      - name: Credo
+        if: matrix.lint
+        continue-on-error: true
+        run: mix credo --strict
+
+      - name: Run tests
+        run: mix test
