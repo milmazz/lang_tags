@@ -39,7 +39,7 @@ defmodule LangTagsTest do
 
   test "languages/1 returns all languages for macrolanguage" do
     subtags = L.languages("zh")
-    assert Enum.count(subtags) > 0
+    assert Enum.any?(subtags)
 
     assert_raise ArgumentError, ~r/is not a valid macrolanguage./, fn ->
       L.languages("en")
@@ -48,7 +48,7 @@ defmodule LangTagsTest do
 
   test "search/1 matches descriptions" do
     subtags = L.search("Maltese")
-    assert Enum.count(subtags) > 0
+    assert Enum.any?(subtags)
 
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "mt"
@@ -63,7 +63,7 @@ defmodule LangTagsTest do
 
   test "search/1 puts exact match at the top" do
     subtags = L.search("Dari")
-    assert Enum.count(subtags) > 0
+    assert Enum.any?(subtags)
 
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "prs"
