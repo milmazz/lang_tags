@@ -103,16 +103,55 @@ localize with this?"
 `lang_tags` validates a tag against the *IANA registry*: whether every subtag
 is actually registered, whether the tag or one of its subtags is deprecated and
 what its preferred value is, and whether it breaks a `Suppress-Script` or
-variant prefix rule — with a code and a message for each problem it finds. A
-tag can be valid and still have no CLDR locale behind it, and it can resolve to
-a CLDR locale while being deprecated or misformatted.
+variant prefix rule — with a code and a message for each problem it finds. The
+two are not the same test: `bis`, `in` and `zh-cmn-Hant` all resolve to a
+locale under localize, while `lang_tags` reports them as unregistered or
+deprecated and hands you the replacement to store.
 
-The two compose. Validate and canonicalize untrusted input — a user setting, an
-`Accept-Language` header, a locale column — with `lang_tags`, then hand the
-canonical tag to `Localize.validate_locale/1` to choose the locale you will
-actually format with. Reach for `lang_tags` alone when you accept, correct or
-store tags but never localize; reach for localize alone when your locales are a
-fixed set you control.
+So the two compose: reject or repair the tag against the registry, then ask
+localize for a locale.
+
+```elixir
+defmodule MyApp.Locale do
+  @doc "Resolve an externally supplied language tag to a locale we can format with."
+  def resolve(input) do
+    tag = LangTags.Tag.new(input)
+
+    case LangTags.Tag.errors(tag) do
+      [] ->
+        Localize.validate_locale(LangTags.Tag.format(tag))
+
+      errors ->
+        # A deprecated tag carries a modern replacement; anything else is
+        # input we should not accept.
+        case LangTags.Tag.preferred(tag) do
+          nil -> {:error, errors}
+          preferred -> Localize.validate_locale(LangTags.Tag.format(preferred))
+        end
+    end
+  end
+end
+```
+
+```elixir
+# Case-corrected, then resolved.
+iex> MyApp.Locale.resolve("en-gb")
+{:ok, Localize.LanguageTag.new!("en-GB")}
+
+# Deprecated since 2009. Handing localize the preferred value "cmn-Hant"
+# resolves to zh-Hant, where passing "zh-cmn-Hant" to localize directly leaves
+# the legacy extlang form in place.
+iex> MyApp.Locale.resolve("zh-cmn-Hant")
+{:ok, Localize.LanguageTag.new!("zh-Hant")}
+
+# Rejected, with a reason to show the caller.
+iex> MyApp.Locale.resolve("en-Qqqq")
+{:error, [%{code: :unknown, subtag: "qqqq", message: "'qqqq' is not registered"}]}
+```
+
+Reach for `lang_tags` alone when you accept, correct or store tags but never
+localize — an `Accept-Language` header, an `xml:lang` attribute, a locale
+column. Reach for localize alone when your locales are a fixed set you control.
 
 Already on ex_cldr? The same split applies, with `Cldr.validate_locale/2` in
 place of `Localize.validate_locale/1`. ex_cldr is superseded by localize; see
