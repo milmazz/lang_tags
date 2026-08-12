@@ -46,6 +46,31 @@ iex> "az-latn-az" |> LangTags.Tag.new() |> LangTags.Tag.format()
 "az-Latn-AZ"
 ```
 
+Validate a tag, and find out why it was rejected:
+
+```elixir
+iex> LangTags.Tag.valid?("en-GB")
+true
+
+iex> LangTags.Tag.valid?("gsw-Latn")
+false
+
+iex> LangTags.Tag.errors("gsw-Latn")
+[%{code: :suppress_script, subtag: "latn",
+   message: "the script subtag 'latn' is the default for language 'gsw' and should be omitted"}]
+```
+
+`errors/1` reports every problem it finds rather than stopping at the first,
+so a caller can show them together. See the [documentation][Docs] for the full
+list of codes.
+
+Search tags and subtags by description, with exact matches first:
+
+```elixir
+iex> LangTags.search("Maltese") |> Enum.map(&LangTags.SubTag.format/1)
+["mt", "mdl", "mdl"]
+```
+
 Check which types a string is registered as:
 
 ```elixir
@@ -77,16 +102,21 @@ Use `mix lang_tags.update --check` to report whether an update is available
 without writing anything; it exits non-zero when one is, so it can drive a
 scheduled job.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## Javascript version
 
 This project is an Elixir version of the [language-tags][] Javascript project.
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE][].
 
 [BCP 47]: https://tools.ietf.org/html/bcp47
 [RFC 5646]: https://tools.ietf.org/html/rfc5646
 [Registry]: https://www.iana.org/assignments/language-subtag-registry
 [Docs]: https://hexdocs.pm/lang_tags
 [language-tags]: https://github.com/mattcg/language-tags
+[LICENSE]: https://github.com/milmazz/lang_tags/blob/master/LICENSE
