@@ -189,7 +189,7 @@ defmodule LangTags.SubTag do
   def script(subtag) when is_map(subtag) do
     script = subtag["Record"]["Suppress-Script"]
 
-    if script, do: new(script, "script"), else: nil
+    if script, do: new(script, "script")
   end
 
   @doc """
@@ -286,8 +286,7 @@ defmodule LangTags.SubTag do
 
   """
   @spec collection?(String.t()) :: boolean
-  def collection?(subtag) when is_binary(subtag),
-    do: subtag |> String.downcase() |> Registry.collection?()
+  def collection?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.collection?()
 
   @doc """
   Indicates if the given string is a macrolanguage as defined by ISO 639-3.
@@ -302,8 +301,7 @@ defmodule LangTags.SubTag do
 
   """
   @spec macrolanguage?(String.t()) :: boolean
-  def macrolanguage?(subtag) when is_binary(subtag),
-    do: subtag |> String.downcase() |> Registry.macrolanguage?()
+  def macrolanguage?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.macrolanguage?()
 
   @doc """
   Indicates if the given string represents a special language code.
@@ -319,8 +317,7 @@ defmodule LangTags.SubTag do
 
   """
   @spec special?(String.t()) :: boolean
-  def special?(subtag) when is_binary(subtag),
-    do: subtag |> String.downcase() |> Registry.special?()
+  def special?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.special?()
 
   @doc """
   Indicates if the given string represents a code reserved for private use in the ISO 639 standard.
@@ -335,6 +332,5 @@ defmodule LangTags.SubTag do
 
   """
   @spec private_use?(String.t()) :: boolean
-  def private_use?(subtag) when is_binary(subtag),
-    do: subtag |> String.downcase() |> Registry.private_use?()
+  def private_use?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.private_use?()
 end

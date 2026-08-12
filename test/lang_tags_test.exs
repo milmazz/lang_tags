@@ -1,53 +1,54 @@
 defmodule LangTagsTest do
   use ExUnit.Case
-  doctest LangTags
 
   alias LangTags, as: L
   alias LangTags.SubTag, as: ST
+
+  doctest L
 
   test "date/0 returns file date" do
     assert L.date() =~ ~r/\d{4}-\d{2}-\d{2}/
   end
 
   test "type/2 returns subtag by type" do
-    subtag = "Latn" |> L.type("script")
+    subtag = L.type("Latn", "script")
 
-    assert subtag |> ST.format() == "Latn"
-    assert subtag |> ST.type() == "script"
+    assert ST.format(subtag) == "Latn"
+    assert ST.type(subtag) == "script"
 
     refute L.type("en", "script")
   end
 
   test "region/1 returns subtag by region" do
-    subtag = "IQ" |> L.region()
+    subtag = L.region("IQ")
 
-    assert subtag |> ST.format() == "IQ"
-    assert subtag |> ST.type() == "region"
+    assert ST.format(subtag) == "IQ"
+    assert ST.type(subtag) == "region"
 
     refute L.region("en")
   end
 
   test "language/1 returns subtag by language" do
-    subtag = "en" |> L.language()
+    subtag = L.language("en")
 
-    assert subtag |> ST.format() == "en"
-    assert subtag |> ST.type() == "language"
+    assert ST.format(subtag) == "en"
+    assert ST.type(subtag) == "language"
 
     refute L.language("GB")
   end
 
   test "languages/1 returns all languages for macrolanguage" do
-    subtags = "zh" |> L.languages()
-    assert subtags |> Enum.count() > 0
+    subtags = L.languages("zh")
+    assert Enum.count(subtags) > 0
 
     assert_raise ArgumentError, ~r/is not a valid macrolanguage./, fn ->
-      LangTags.languages("en")
+      L.languages("en")
     end
   end
 
   test "search/1 matches descriptions" do
     subtags = L.search("Maltese")
-    assert subtags |> Enum.count() > 0
+    assert Enum.count(subtags) > 0
 
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "mt"
@@ -62,18 +63,18 @@ defmodule LangTagsTest do
 
   test "search/1 puts exact match at the top" do
     subtags = L.search("Dari")
-    assert subtags |> Enum.count() > 0
+    assert Enum.count(subtags) > 0
 
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "prs"
   end
 
   test "subtags/1 returns subtags" do
-    subtags = "whatever" |> L.subtags()
+    subtags = L.subtags("whatever")
     assert subtags == []
 
     subtags = L.subtags("mt")
-    assert subtags |> Enum.count() == 2
+    assert Enum.count(subtags) == 2
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "mt"
     assert subtags |> Enum.at(1) |> ST.type() == "region"
@@ -88,6 +89,6 @@ defmodule LangTagsTest do
   test "gets tag" do
     assert L.tags("en") == %{"Tag" => "en"}
 
-    assert L.tags("en-gb") |> LangTags.Tag.format() == "en-GB"
+    assert "en-gb" |> L.tags() |> LangTags.Tag.format() == "en-GB"
   end
 end

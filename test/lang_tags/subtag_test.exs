@@ -1,6 +1,5 @@
 defmodule LangTags.SubTagTest do
   use ExUnit.Case, async: true
-  doctest LangTags.SubTag
 
   import LangTags.SubTag,
     only: [
@@ -16,15 +15,17 @@ defmodule LangTags.SubTagTest do
       type: 1
     ]
 
+  doctest LangTags.SubTag
+
   test "type/1 returns type" do
-    assert new("zh", "language") |> type() == "language"
-    assert new("IQ", "region") |> type() == "region"
+    assert "zh" |> new("language") |> type() == "language"
+    assert "IQ" |> new("region") |> type() == "region"
   end
 
   test "descriptions/1 returns descriptions" do
-    assert new("IQ", "region") |> descriptions() == ["Iraq"]
+    assert "IQ" |> new("region") |> descriptions() == ["Iraq"]
 
-    assert new("vsv", "extlang") |> descriptions() == [
+    assert "vsv" |> new("extlang") |> descriptions() == [
              "Valencian Sign Language",
              "Llengua de signes valenciana"
            ]
@@ -82,39 +83,39 @@ defmodule LangTags.SubTagTest do
   end
 
   test "scope/1 returns scope" do
-    assert new("zh", "language") |> scope() == "macrolanguage"
-    assert new("nah", "language") |> scope() == "collection"
-    assert new("en", "language") |> scope() == "individual"
-    assert new("IQ", "region") |> scope() == "individual"
+    assert "zh" |> new("language") |> scope() == "macrolanguage"
+    assert "nah" |> new("language") |> scope() == "collection"
+    assert "en" |> new("language") |> scope() == "individual"
+    assert "IQ" |> new("region") |> scope() == "individual"
   end
 
   test "deprecated/1 returns deprecation date if available" do
     # German democratic Republic
-    assert new("DD", "region") |> deprecated() == "1990-10-30"
-    assert new("DE", "region") |> deprecated() == nil
+    assert "DD" |> new("region") |> deprecated() == "1990-10-30"
+    assert "DE" |> new("region") |> deprecated() == nil
   end
 
   test "added/1 returns date added" do
-    assert new("DD", "region") |> added() == "2005-10-16"
-    assert new("DG", "region") |> added() == "2009-07-29"
+    assert "DD" |> new("region") |> added() == "2005-10-16"
+    assert "DG" |> new("region") |> added() == "2009-07-29"
   end
 
   test "comments/1 returns comments" do
     # Yugoslavia
-    assert new("YU", "region") |> comments() == ["see BA, HR, ME, MK, RS, or SI"]
+    assert "YU" |> new("region") |> comments() == ["see BA, HR, ME, MK, RS, or SI"]
   end
 
   test "format/1 formats subtag according to conventions" do
     # Language
-    assert new("en", "language") |> format() == "en"
-    assert new("EN", "language") |> format() == "en"
+    assert "en" |> new("language") |> format() == "en"
+    assert "EN" |> new("language") |> format() == "en"
 
     # Region
-    assert new("GB", "region") |> format() == "GB"
-    assert new("gb", "region") |> format() == "GB"
+    assert "GB" |> new("region") |> format() == "GB"
+    assert "gb" |> new("region") |> format() == "GB"
 
     # Script
-    assert new("Latn", "script") |> format() == "Latn"
-    assert new("latn", "script") |> format() == "Latn"
+    assert "Latn" |> new("script") |> format() == "Latn"
+    assert "latn" |> new("script") |> format() == "Latn"
   end
 end
