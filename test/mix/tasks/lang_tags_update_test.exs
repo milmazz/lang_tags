@@ -24,6 +24,14 @@ defmodule Mix.Tasks.LangTags.UpdateTest do
     test "only accepts File-Date on the first line" do
       assert Update.parse_file_date("Type: language\nFile-Date: 2026-08-08\n") == :error
     end
+
+    test "handles CRLF line endings" do
+      assert Update.parse_file_date("File-Date: 2026-08-08\r\n%%\r\n") == {:ok, "2026-08-08"}
+    end
+
+    test "handles a header with no trailing newline" do
+      assert Update.parse_file_date("File-Date: 2026-08-08") == {:ok, "2026-08-08"}
+    end
   end
 
   describe "validate_registry/1" do
@@ -43,8 +51,48 @@ defmodule Mix.Tasks.LangTags.UpdateTest do
       assert message =~ "too few records"
     end
 
+    test "reports how many records it actually found when rejecting" do
+      assert {:error, message} = Update.validate_registry(registry(3))
+      assert message =~ "too few records (3)"
+    end
+
+    test "accepts a registry that uses CRLF line endings" do
+      crlf = String.replace(registry(2_000), "\n", "\r\n")
+
+      assert Update.validate_registry(crlf) == :ok
+    end
+
     test "rejects empty contents" do
       assert {:error, _} = Update.validate_registry("")
+    end
+  end
+
+  describe "file_date/1" do
+    @describetag :tmp_dir
+
+    test "reads the File-Date of a registry on disk", %{tmp_dir: dir} do
+      path = Path.join(dir, "registry")
+      File.write!(path, registry(500))
+
+      assert Update.file_date(path) == {:ok, "2026-08-08"}
+    end
+
+    test "returns :error when the first line is not a File-Date header", %{tmp_dir: dir} do
+      path = Path.join(dir, "registry")
+      File.write!(path, "Type: language\nFile-Date: 2026-08-08\n")
+
+      assert Update.file_date(path) == :error
+    end
+
+    test "returns :error when the file is empty", %{tmp_dir: dir} do
+      path = Path.join(dir, "registry")
+      File.write!(path, "")
+
+      assert Update.file_date(path) == :error
+    end
+
+    test "returns :error when the file does not exist", %{tmp_dir: dir} do
+      assert Update.file_date(Path.join(dir, "nope")) == :error
     end
   end
 end

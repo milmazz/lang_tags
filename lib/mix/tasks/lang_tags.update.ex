@@ -69,11 +69,29 @@ defmodule Mix.Tasks.LangTags.Update do
   """
   @spec parse_file_date(binary) :: {:ok, binary} | :error
   def parse_file_date("File-Date: " <> rest) do
-    [date | _] = String.split(rest, ~r/\r?\n/, parts: 2)
+    # :binary.split/2 stops at the first line break. A Regex here would scan
+    # the whole body, which matters because this is handed the entire
+    # multi-hundred-kilobyte download.
+    [date | _] = :binary.split(rest, ["\r\n", "\n"])
     {:ok, String.trim(date)}
   end
 
   def parse_file_date(_contents), do: :error
+
+  @doc """
+  Reads the `File-Date` header of a registry file on disk.
+
+  Only the first line is read. The registry is several hundred kilobytes and
+  the header is its first line, so there is no reason to load the rest of it
+  just to compare dates.
+  """
+  @spec file_date(Path.t()) :: {:ok, binary} | :error
+  def file_date(path) do
+    case File.open(path, [:read], &IO.read(&1, :line)) do
+      {:ok, line} when is_binary(line) -> parse_file_date(line)
+      _otherwise -> :error
+    end
+  end
 
   @doc """
   Checks that contents look like the IANA registry before we overwrite the
@@ -86,7 +104,7 @@ defmodule Mix.Tasks.LangTags.Update do
         {:error, "response does not begin with a File-Date header (probably an error page)"}
 
       {:ok, _date} ->
-        case count_records(contents) do
+        case count_records(contents, @min_records) do
           count when count >= @min_records ->
             :ok
 
@@ -96,20 +114,25 @@ defmodule Mix.Tasks.LangTags.Update do
     end
   end
 
-  defp count_records(contents) do
+  # Records are separated by lines containing only "%%", with one extra
+  # separator between the File-Date header and the first record.
+  #
+  # Validation only asks whether the floor is cleared, so stop counting there
+  # instead of walking all ~9000 records. A body that falls short never
+  # reaches the limit, so the exact count is still available for the error
+  # message. Splitting lazily also avoids materialising ~49_000 line binaries.
+  defp count_records(contents, limit) do
     contents
-    |> String.split(~r/\r?\n/)
-    |> Enum.count(&(&1 == "%%"))
+    |> String.splitter(["\r\n", "\n"])
+    |> Enum.count_until(&(&1 == "%%"), limit + 1)
     |> Kernel.-(1)
     |> max(0)
   end
 
   defp current_file_date do
-    with {:ok, contents} <- File.read(@registry_path),
-         {:ok, date} <- parse_file_date(contents) do
-      date
-    else
-      _ -> nil
+    case file_date(@registry_path) do
+      {:ok, date} -> date
+      :error -> nil
     end
   end
 
@@ -130,9 +153,20 @@ defmodule Mix.Tasks.LangTags.Update do
       connect_timeout: 30_000
     ]
 
-    case :httpc.request(:get, {String.to_charlist(url), []}, http_opts, body_format: :binary) do
+    # Identify the tool rather than issuing an anonymous request.
+    headers = [{~c"user-agent", ~c"lang_tags (Elixir; +https://github.com/milmazz/lang_tags)"}]
+    request = {String.to_charlist(url), headers}
+
+    case :httpc.request(:get, request, http_opts, body_format: :binary) do
       {:ok, {{_version, 200, _reason}, _headers, body}} ->
         body
+
+      {:ok, {{_version, status, reason}, _headers, _body}} when status in [403, 429] ->
+        Mix.raise(
+          "Failed to fetch registry: HTTP #{status} #{reason}. " <>
+            "IANA throttles repeated requests, so this is usually transient. " <>
+            "Wait a few minutes and try again."
+        )
 
       {:ok, {{_version, status, reason}, _headers, _body}} ->
         Mix.raise("Failed to fetch registry: HTTP #{status} #{reason}")
