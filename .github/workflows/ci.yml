@@ -65,7 +65,7 @@ jobs:
 
       # Advisory for now. Every current finding is in the unfinished valid?/1
       # and search/1 code, including the TODO comments that legitimately track
-      # that work. Drop continue-on-error once that issue is closed.
+      # that work. Drop continue-on-error once issue #4 is closed.
       - name: Credo
         if: matrix.lint
         continue-on-error: true
