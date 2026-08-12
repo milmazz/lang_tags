@@ -38,7 +38,20 @@ defmodule LangTags.Mixfile do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
-    ]
+    ] ++ localize_dep()
+  end
+
+  # The README documents how to compose this library with localize, and
+  # test/lang_tags/localize_integration_test.exs checks that documentation
+  # against the real thing. localize requires Elixir ~> 1.17 while this library
+  # supports ~> 1.15, so the dependency is declared only where it can resolve;
+  # the test module is skipped when it is absent.
+  defp localize_dep do
+    if Version.match?(System.version(), ">= 1.17.0") do
+      [{:localize, "~> 1.1", only: :test}]
+    else
+      []
+    end
   end
 
   defp package do
