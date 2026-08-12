@@ -55,7 +55,7 @@ defmodule LangTags.Registry do
                  macrolanguages}
 
               %{"File-Date" => file_date} ->
-                def date() do
+                def date do
                   unquote(file_date)
                 end
 
@@ -176,6 +176,26 @@ defmodule LangTags.Registry do
   def tag(tag) do
     raise(ArgumentError, "non-existent tag '#{tag}'.")
   end
+
+  ## Index
+  #
+  # Records are accumulated by prepending, so they are reversed here to restore
+  # the order they appear in the registry file. Only the keys are stored: the
+  # records themselves are already compiled into subtag/2 and tag/1, and
+  # duplicating their descriptions would roughly double the module's literals.
+  @subtag_keys subtag_records
+               |> Enum.reverse()
+               |> Enum.map(fn %{"Subtag" => key, "Type" => type} -> {key, type} end)
+
+  @tag_keys tag_records |> Enum.reverse() |> Enum.map(fn %{"Tag" => key} -> key end)
+
+  @doc false
+  @spec subtag_keys() :: [{String.t(), String.t()}]
+  def subtag_keys, do: @subtag_keys
+
+  @doc false
+  @spec tag_keys() :: [String.t()]
+  def tag_keys, do: @tag_keys
 
   ## Scopes
   @spec collection?(String.t()) :: boolean

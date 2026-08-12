@@ -96,7 +96,6 @@ defmodule LangTags.TagTest do
     assert subtags |> List.last() |> ST.format() == "Arab"
   end
 
-  @tag :skip
   test "valid?/1 returns true for valid tag" do
     assert "en" |> new() |> valid?()
     assert "en-GB" |> new() |> valid?()
@@ -104,12 +103,10 @@ defmodule LangTags.TagTest do
     assert "de-CH" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns true for subtag followed by private tag" do
     assert "en-x-whatever" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns true for non-deprecated grandfathered tag" do
     # Grandfathered but not deprecated, therefore valid.
     tag = "i-default" |> new()
@@ -118,7 +115,6 @@ defmodule LangTags.TagTest do
     assert tag |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns true for non-deprecated redundant tag" do
     # Redundant but not deprecated, therefore valid.
     tag = "zh-Hans" |> new()
@@ -132,14 +128,12 @@ defmodule LangTags.TagTest do
     assert tag |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false for non-existent tag" do
     refute "zzz" |> new |> valid?()
     refute "zzz-Latn" |> new() |> valid?()
     refute "en-Lzzz" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false for deprecated grandfathered tag" do
     # Grandfathered and deprecated, therefore invalid.
     tag = "art-lojban" |> new()
@@ -148,7 +142,6 @@ defmodule LangTags.TagTest do
     refute tag |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false for deprecated redundant tag" do
     # Redundant and deprecated, therefore invalid.
     tag = "zh-cmn" |> new()
@@ -161,7 +154,6 @@ defmodule LangTags.TagTest do
     refute tag |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if contains deprecated subtags" do
     # Moldovan (mo) is deprecated as a language.
     refute "mo" |> new() |> valid?()
@@ -170,62 +162,56 @@ defmodule LangTags.TagTest do
     refute "en-NT" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false for tag with redundant script subtag" do
     # Swiss German (gsw) has a suppress script of Latn.
     refute "gsw-Latn" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if tag contains no language tag and is not grandfathered or redundant" do
     refute "IQ-Arab" |> new() |> valid?()
     refute "419" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if language subtag is not front of tag" do
     refute "GB-en" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if more than one language subtag appears" do
     refute "en-en" |> new() |> valid?()
     refute "ko-en" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if more than one region subtag appears" do
     refute "en-001-gb" |> new() |> valid?()
     refute "gb-001" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if more than one extlang subtag appears" do
     refute "en-asp-bog" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if more than one script subtag appears" do
     refute "arb-Latn-Cyrl" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if a duplicate variant subtag appears" do
     refute "ca-valencia-valencia" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if private-use subtag contains more than 8 characters" do
     # i.e. more than 8 in each component, not in total.
-    refute "en-x-more-than-eight-chars" |> new() |> valid?()
+
+    # Long in total, but every component is within the limit.
+    assert "en-x-more-than-eight-chars" |> new() |> valid?()
+
+    # A single component of 18 characters.
     refute "en-x-morethaneightchars" |> new() |> valid?()
   end
 
-  @tag :skip
   test "valid?/1 returns false if script subtag is same as language suppress-script" do
-    "en-Latn" |> new() |> valid?()
-    "en-GB-Latn" |> new() |> valid?()
-    "gsw-Latn" |> new() |> valid?()
+    refute "en-Latn" |> new() |> valid?()
+    refute "en-GB-Latn" |> new() |> valid?()
+    refute "gsw-Latn" |> new() |> valid?()
   end
 
   test "deprecated/1 returns deprecation date when available" do

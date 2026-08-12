@@ -45,7 +45,6 @@ defmodule LangTagsTest do
     end
   end
 
-  @tag :skip
   test "search/1 matches descriptions" do
     subtags = L.search("Maltese")
     assert subtags |> Enum.count() > 0
@@ -61,7 +60,6 @@ defmodule LangTagsTest do
     assert subtags == []
   end
 
-  @tag :skip
   test "search/1 puts exact match at the top" do
     subtags = L.search("Dari")
     assert subtags |> Enum.count() > 0
@@ -82,7 +80,6 @@ defmodule LangTagsTest do
     assert subtags |> Enum.at(1) |> ST.format() == "MT"
   end
 
-  @tag :skip
   test "check/1 checks tag validity" do
     assert L.check("en")
     refute L.check("mo")

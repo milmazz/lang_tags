@@ -10,7 +10,7 @@ defmodule LangTags do
   For more information, see [BCP47](https://tools.ietf.org/html/bcp47)
   """
 
-  alias LangTags.{Registry, Tag, SubTag}
+  alias LangTags.{Registry, SubTag, Tag}
 
   @doc """
   Shortcut for `LangTags.Tag.new/1`
@@ -116,21 +116,73 @@ defmodule LangTags do
     end)
   end
 
-  # @doc """
-  # Search for tags and subtags by description.
+  @doc """
+  Search for tags and subtags by description.
 
-  # Supports either a RegExp or a string for `description`. Returns a list
-  # of `Subtag` and `Tag` maps or an empty list if no results were found.
+  Supports either a `Regex` or a string for `description`. Returns a list of
+  subtag and tag maps, or an empty list if no results were found.
 
-  # Note that `Tag` map in the results represent 'grandfathered' or 'redundant'
-  # tags. These are excluded by default. Set the `all` parameter to `true`
-  # to include them.
+  Search is case-insensitive when `description` is a string, and matches on
+  any part of a description. Entries whose description matches the query
+  exactly are returned first; the rest follow in registry order.
 
-  # Search is case-insensitive if `description` is a string.
-  # """
-  # def search(_query, _all) do
-  #   # TODO: Implement
-  # end
+  Note that tag maps in the results represent *grandfathered* or *redundant*
+  tags. These are excluded by default. Set the `all` parameter to `true` to
+  include them.
+
+  ## Examples
+
+      iex> LangTags.search("Maltese") |> Enum.map(&LangTags.SubTag.format/1)
+      ["mt", "mdl", "mdl"]
+
+      iex> LangTags.search(~r/^Klingon$/) |> Enum.map(&LangTags.SubTag.format/1)
+      ["tlh"]
+
+      iex> LangTags.search("Gibberish")
+      []
+
+  """
+  @spec search(String.t() | Regex.t(), boolean) :: [map]
+  def search(description, all \\ false) do
+    subtags =
+      for {key, type} <- Registry.subtag_keys(),
+          descriptions = descriptions(Registry.subtag(key, type)),
+          matches?(descriptions, description),
+          do: {SubTag.new(key, type), exact?(descriptions, description)}
+
+    tags =
+      for key <- tag_keys(all),
+          descriptions = descriptions(Registry.tag(key)),
+          matches?(descriptions, description),
+          do: {Tag.new(key), exact?(descriptions, description)}
+
+    {exact, partial} = Enum.split_with(subtags ++ tags, fn {_result, exact?} -> exact? end)
+
+    Enum.map(exact ++ partial, fn {result, _exact?} -> result end)
+  end
+
+  defp tag_keys(true), do: Registry.tag_keys()
+  defp tag_keys(false), do: []
+
+  defp descriptions(record), do: record["Description"] || []
+
+  defp matches?(descriptions, %Regex{} = description) do
+    Enum.any?(descriptions, &Regex.match?(description, &1))
+  end
+
+  defp matches?(descriptions, description) when is_binary(description) do
+    description = String.downcase(description)
+    Enum.any?(descriptions, &String.contains?(String.downcase(&1), description))
+  end
+
+  # Exactness only makes sense for a literal string; a pattern that matched at
+  # all has already said everything it can about how well it matched.
+  defp exact?(_descriptions, %Regex{}), do: false
+
+  defp exact?(descriptions, description) when is_binary(description) do
+    description = String.downcase(description)
+    Enum.any?(descriptions, &(String.downcase(&1) == description))
+  end
 
   @doc """
   Returns a list of subtag maps representing all the *language* type subtags belonging to the given *macrolanguage* type subtag.
