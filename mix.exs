@@ -1,7 +1,7 @@
 defmodule LangTags.Mixfile do
   use Mix.Project
 
-  @version "0.2.0-dev"
+  @version "0.2.0"
   @source_url "https://github.com/milmazz/lang_tags"
 
   def project do
@@ -46,14 +46,14 @@ defmodule LangTags.Mixfile do
       licenses: ["Apache-2.0"],
       maintainers: ["Milton Mazzarri"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib priv mix.exs README.md LICENSE)
+      files: ~w(lib priv mix.exs README.md CHANGELOG.md LICENSE)
     ]
   end
 
   defp docs do
     [
       main: "readme",
-      extras: ["README.md"],
+      extras: ["README.md", "CHANGELOG.md"],
       source_url: @source_url,
       source_ref: "v#{@version}"
     ]
