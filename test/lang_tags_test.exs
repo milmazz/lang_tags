@@ -68,10 +68,10 @@ defmodule LangTagsTest do
 
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "prs"
-    end
+  end
 
   test "subtags/1 returns subtags" do
-    subtags = "whatever" |>  L.subtags()
+    subtags = "whatever" |> L.subtags()
     assert subtags == []
 
     subtags = L.subtags("mt")
@@ -88,9 +88,9 @@ defmodule LangTagsTest do
     refute L.check("mo")
   end
 
- test "gets tag" do
-   assert L.tags("en") == %{"Tag" => "en"}
+  test "gets tag" do
+    assert L.tags("en") == %{"Tag" => "en"}
 
-   assert L.tags("en-gb") |> LangTags.Tag.format() == "en-GB"
- end
+    assert L.tags("en-gb") |> LangTags.Tag.format() == "en-GB"
+  end
 end

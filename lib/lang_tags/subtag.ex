@@ -19,7 +19,7 @@ defmodule LangTags.SubTag do
       ** (ArgumentError) non-existent subtag 'es' of type 'script'.
 
   """
-  @spec new(String.t, String.t) :: map
+  @spec new(String.t(), String.t()) :: map
   def new(subtag, type) do
     # Lowercase for consistency (case is only a formatting convention, not a
     # standard requirement).
@@ -42,7 +42,7 @@ defmodule LangTags.SubTag do
       nil
 
   """
-  @spec find(String.t, String.t) :: map | nil
+  @spec find(String.t(), String.t()) :: map | nil
   def find(subtag, type) do
     try do
       new(subtag, type)
@@ -63,7 +63,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec type(map) :: String.t | nil
+  @spec type(map) :: String.t() | nil
   def type(subtag) when is_map(subtag), do: subtag["Record"]["Type"]
 
   @doc """
@@ -75,7 +75,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec language?(String.t) :: boolean
+  @spec language?(String.t()) :: boolean
   def language?(subtag), do: Registry.language?(subtag)
 
   @doc """
@@ -87,7 +87,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec extlang?(String.t) :: boolean
+  @spec extlang?(String.t()) :: boolean
   def extlang?(subtag), do: Registry.extlang?(subtag)
 
   @doc """
@@ -99,7 +99,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec script?(String.t) :: boolean
+  @spec script?(String.t()) :: boolean
   def script?(subtag), do: Registry.script?(subtag)
 
   @doc """
@@ -113,7 +113,7 @@ defmodule LangTags.SubTag do
       false
 
   """
-  @spec region?(String.t) :: boolean
+  @spec region?(String.t()) :: boolean
   def region?(subtag), do: Registry.region?(subtag)
 
   @doc """
@@ -125,7 +125,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec variant?(String.t) :: boolean
+  @spec variant?(String.t()) :: boolean
   def variant?(subtag), do: Registry.variant?(subtag)
 
   @doc """
@@ -137,7 +137,7 @@ defmodule LangTags.SubTag do
       ["Romanian", "Moldavian", "Moldovan"]
 
   """
-  @spec descriptions(map) :: String.t | nil
+  @spec descriptions(map) :: String.t() | nil
   def descriptions(subtag) when is_map(subtag), do: subtag["Record"]["Description"]
 
   @doc """
@@ -158,8 +158,11 @@ defmodule LangTags.SubTag do
   end
 
   defp process_preferred(_subtag, nil), do: nil
+
   defp process_preferred(subtag, preferred) do
-    type = if subtag["Record"]["Type"] == "extlang", do: "language", else: subtag["Record"]["Type"]
+    type =
+      if subtag["Record"]["Type"] == "extlang", do: "language", else: subtag["Record"]["Type"]
+
     new(preferred, type)
   end
 
@@ -196,7 +199,7 @@ defmodule LangTags.SubTag do
       "collection"
 
   """
-  @spec scope(map) :: String.t
+  @spec scope(map) :: String.t()
   def scope(subtag) when is_map(subtag), do: subtag["Record"]["Scope"] || "individual"
 
   @doc """
@@ -208,7 +211,7 @@ defmodule LangTags.SubTag do
       "1989-01-01"
 
   """
-  @spec deprecated(map) :: String.t | nil
+  @spec deprecated(map) :: String.t() | nil
   def deprecated(subtag) when is_map(subtag), do: subtag["Record"]["Deprecated"]
 
   @doc """
@@ -220,7 +223,7 @@ defmodule LangTags.SubTag do
       "2005-10-16"
 
   """
-  @spec added(map) :: String.t | nil
+  @spec added(map) :: String.t() | nil
   def added(subtag) when is_map(subtag), do: subtag["Record"]["Added"]
 
   @doc """
@@ -232,7 +235,7 @@ defmodule LangTags.SubTag do
       ["see ntx"]
 
   """
-  @spec comments(map) :: [String.t] | []
+  @spec comments(map) :: [String.t()] | []
   def comments(subtag) when is_map(subtag), do: subtag["Record"]["Comments"] || []
 
   @doc """
@@ -253,7 +256,7 @@ defmodule LangTags.SubTag do
       "MN"
 
   """
-  @spec format(map) :: String.t
+  @spec format(map) :: String.t()
   def format(subtag) when is_map(subtag) do
     process_format(subtag["Subtag"], subtag["Record"]["Type"])
   end
@@ -278,8 +281,9 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec collection?(String.t) :: boolean
-  def collection?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.collection?()
+  @spec collection?(String.t()) :: boolean
+  def collection?(subtag) when is_binary(subtag),
+    do: subtag |> String.downcase() |> Registry.collection?()
 
   @doc """
   Indicates if the given string is a macrolanguage as defined by ISO 639-3.
@@ -293,8 +297,9 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec macrolanguage?(String.t) :: boolean
-  def macrolanguage?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.macrolanguage?()
+  @spec macrolanguage?(String.t()) :: boolean
+  def macrolanguage?(subtag) when is_binary(subtag),
+    do: subtag |> String.downcase() |> Registry.macrolanguage?()
 
   @doc """
   Indicates if the given string represents a special language code.
@@ -309,8 +314,9 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec special?(String.t) :: boolean
-  def special?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.special?()
+  @spec special?(String.t()) :: boolean
+  def special?(subtag) when is_binary(subtag),
+    do: subtag |> String.downcase() |> Registry.special?()
 
   @doc """
   Indicates if the given string represents a code reserved for private use in the ISO 639 standard.
@@ -324,6 +330,7 @@ defmodule LangTags.SubTag do
       true
 
   """
-  @spec private_use?(String.t) :: boolean
-  def private_use?(subtag) when is_binary(subtag), do: subtag |> String.downcase() |> Registry.private_use?()
+  @spec private_use?(String.t()) :: boolean
+  def private_use?(subtag) when is_binary(subtag),
+    do: subtag |> String.downcase() |> Registry.private_use?()
 end

@@ -8,7 +8,7 @@ defmodule LangTags.Tag do
    For more information, see [section 2.2.8](https://tools.ietf.org/html/bcp47#section-2.2.8)
   """
 
-  alias LangTags.{SubTag,Registry}
+  alias LangTags.{SubTag, Registry}
 
   @doc """
   Creates a new tag as a map
@@ -22,7 +22,7 @@ defmodule LangTags.Tag do
           "Type" => "grandfathered"}, "Tag" => "en-gb-oed"}
 
   """
-  @spec new(String.t) :: map
+  @spec new(String.t()) :: map
   def new(tag) do
     # Lowercase for consistency (case is only a formatting
     # convention, not a standard requirement)
@@ -46,8 +46,9 @@ defmodule LangTags.Tag do
       %{"Tag" => "cmn-hant"}
 
   """
-  @spec preferred(map | String.t) :: map | nil
+  @spec preferred(map | String.t()) :: map | nil
   def preferred(tag) when is_binary(tag), do: tag |> new() |> preferred()
+
   def preferred(tag) when is_map(tag) do
     preferred = tag["Record"]["Preferred-Value"]
 
@@ -67,7 +68,7 @@ defmodule LangTags.Tag do
       LangTags.Tag.subtags("az-arab")
 
   """
-  @spec subtags(map | String.t) :: [map] | []
+  @spec subtags(map | String.t()) :: [map] | []
   def subtags(tag) when is_map(tag), do: process_subtags(tag, tag["Record"]["Type"])
   def subtags(tag) when is_binary(tag), do: tag |> new() |> subtags()
 
@@ -82,7 +83,7 @@ defmodule LangTags.Tag do
         "Subtag" => "az"}
 
   """
-  @spec language(map | String.t) :: map
+  @spec language(map | String.t()) :: map
   def language(tag) when is_map(tag), do: find(tag, "language")
   def language(tag) when is_binary(tag), do: tag |> new() |> language()
 
@@ -95,7 +96,7 @@ defmodule LangTags.Tag do
       true
 
   """
-  @spec region(map | String.t) :: map
+  @spec region(map | String.t()) :: map
   def region(tag) when is_map(tag), do: find(tag, "region")
   def region(tag) when is_binary(tag), do: tag |> new() |> region()
 
@@ -109,7 +110,7 @@ defmodule LangTags.Tag do
         "Subtag" => "arab", "Type" => "script"}, "Subtag" => "arab"}
 
   """
-  @spec script(map | String.t) :: map
+  @spec script(map | String.t()) :: map
   def script(tag) when is_map(tag), do: find(tag, "script")
   def script(tag) when is_binary(tag), do: tag |> new() |> script()
 
@@ -123,14 +124,14 @@ defmodule LangTags.Tag do
         "Subtag" => "arab", "Type" => "script"}, "Subtag" => "arab"}
 
   """
-  @spec find(map | String.t, String.t) :: map
+  @spec find(map | String.t(), String.t()) :: map
   def find(tag, filter) when is_map(tag), do: Enum.find(subtags(tag), &(type(&1) == filter))
   def find(tag, filter) when is_binary(tag), do: tag |> new() |> find(filter)
 
   @doc """
   Returns `true` if the tag is valid, `false` otherwise.
   """
-  @spec valid?(map | String.t) :: boolean
+  @spec valid?(map | String.t()) :: boolean
   def valid?(tag) when is_map(tag), do: errors(tag) == []
   def valid?(tag) when is_binary(tag), do: tag |> new |> valid?()
 
@@ -146,38 +147,39 @@ defmodule LangTags.Tag do
       errors =
         codes
         |> Enum.with_index()
-        |> Enum.reduce_while([], fn({code, index}, acc) ->
-            # Ignore anything after a singleton
-            if String.length(code) < 2 do
-              # Check that each private-use subtag is within the maximum allowed length.
-              acc =
-                codes
-                |> Enum.slice(index, Enum.count(codes))
-                |> Enum.reduce_while(acc, fn(c, result) ->
-                      if String.length(c) > 8 do
-                        {:halt, ["ERR_TOO_LONG" | result]}
-                      else
-                        {:cont, result}
-                      end
-                    end)
+        |> Enum.reduce_while([], fn {code, index}, acc ->
+          # Ignore anything after a singleton
+          if String.length(code) < 2 do
+            # Check that each private-use subtag is within the maximum allowed length.
+            acc =
+              codes
+              |> Enum.slice(index, Enum.count(codes))
+              |> Enum.reduce_while(acc, fn c, result ->
+                if String.length(c) > 8 do
+                  {:halt, ["ERR_TOO_LONG" | result]}
+                else
+                  {:cont, result}
+                end
+              end)
 
-                {:halt, acc}
+            {:halt, acc}
+          else
+            if Registry.types(code) == [] do
+              {:halt, ["ERR_UNKNOWN" | acc]}
             else
-              if Registry.types(code) == [] do
-                {:halt, ["ERR_UNKNOWN" | acc]}
-              else
-                {:cont, acc}
-              end
+              {:cont, acc}
             end
-          end)
+          end
+        end)
 
       # Check that first tag is a language tag.
       subtags = subtags(tag)
+
       if subtags |> List.first() |> SubTag.type() == "language" do
         ["ERR_NO_LANGUAGE" | errors]
       else
-         # TODO: Check for more than one of some types and for deprecation.
-         # TODO: Check for correct order.
+        # TODO: Check for more than one of some types and for deprecation.
+        # TODO: Check for correct order.
         errors
       end
     end
@@ -196,7 +198,7 @@ defmodule LangTags.Tag do
       "redundant"
 
   """
-  @spec type(map | String.t) :: String.t
+  @spec type(map | String.t()) :: String.t()
   def type(tag) when is_map(tag), do: tag["Record"]["Type"] || "tag"
   def type(tag) when is_binary(tag), do: tag |> new() |> type()
 
@@ -211,7 +213,7 @@ defmodule LangTags.Tag do
       false
 
   """
-  @spec grandfathered?(String.t) :: boolean
+  @spec grandfathered?(String.t()) :: boolean
   def grandfathered?(tag), do: Registry.grandfathered?(tag)
 
   @doc """
@@ -225,7 +227,7 @@ defmodule LangTags.Tag do
       false
 
   """
-  @spec redundant?(String.t) :: boolean
+  @spec redundant?(String.t()) :: boolean
   def redundant?(tag), do: Registry.redundant?(tag)
 
   @doc """
@@ -237,7 +239,7 @@ defmodule LangTags.Tag do
       "2001-05-25"
 
   """
-  @spec added(map | String.t) :: String.t | nil
+  @spec added(map | String.t()) :: String.t() | nil
   def added(tag) when is_map(tag), do: tag["Record"]["Added"]
   def added(tag) when is_binary(tag), do: tag |> new() |> added()
 
@@ -252,7 +254,7 @@ defmodule LangTags.Tag do
       "2009-07-29"
 
   """
-  @spec deprecated(map | String.t) :: String.t | nil
+  @spec deprecated(map | String.t()) :: String.t() | nil
   def deprecated(tag) when is_map(tag), do: tag["Record"]["Deprecated"]
   def deprecated(tag) when is_binary(tag), do: tag |> new() |> deprecated()
 
@@ -265,7 +267,7 @@ defmodule LangTags.Tag do
       ["Lojban"]
 
   """
-  @spec descriptions(map | String.t) :: String.t | []
+  @spec descriptions(map | String.t()) :: String.t() | []
   def descriptions(tag) when is_map(tag), do: tag["Record"]["Description"] || []
   def descriptions(tag) when is_binary(tag), do: tag |> new() |> descriptions()
 
@@ -280,15 +282,16 @@ defmodule LangTags.Tag do
       "en-GB"
 
   """
-  @spec format(map | String.t) :: String.t
+  @spec format(map | String.t()) :: String.t()
   def format(tag) when is_binary(tag), do: tag |> new() |> format()
+
   def format(tag) when is_map(tag) do
     tag["Tag"]
     |> String.split("-")
     |> Enum.with_index()
-    |> Enum.reduce([], fn({value, index}, acc) ->
-        format_by_index(index, value, acc)
-       end)
+    |> Enum.reduce([], fn {value, index}, acc ->
+      format_by_index(index, value, acc)
+    end)
     |> Enum.reverse()
     |> Enum.join("-")
   end
@@ -300,15 +303,17 @@ defmodule LangTags.Tag do
     codes = tag["Tag"] |> String.split("-") |> Enum.with_index()
 
     subtags =
-      Enum.reduce_while(codes, [], fn({code, index}, subtags) ->
+      Enum.reduce_while(codes, [], fn {code, index}, subtags ->
         # Singletons and anything after are unhandled.
         if String.length(code) < 2 do
-          {:halt, subtags} # Stop the loop (stop processing after a singleton).
+          # Stop the loop (stop processing after a singleton).
+          {:halt, subtags}
         else
           subtags = process_subtag_by_index(index, code, subtags)
           {:cont, subtags}
         end
       end)
+
     Enum.reverse(subtags)
   end
 
@@ -326,8 +331,10 @@ defmodule LangTags.Tag do
     case String.length(value) do
       2 ->
         [String.upcase(value) | acc]
+
       4 ->
         [String.capitalize(value) | acc]
+
       _ ->
         [value | acc]
     end
@@ -370,7 +377,7 @@ defmodule LangTags.Tag do
   end
 
   defp find_subtag(code, subtags, types) do
-    Enum.reduce_while(types, subtags, fn(type, acc) ->
+    Enum.reduce_while(types, subtags, fn type, acc ->
       if subtag = SubTag.find(code, type) do
         {:halt, [subtag | acc]}
       else
