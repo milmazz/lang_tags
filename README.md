@@ -79,6 +79,25 @@ iex> LangTags.types("xml")
 ["extlang", "language"]
 ```
 
+Match the tags you have against the language ranges a client asked for, such
+as those in an `Accept-Language` header ([RFC 4647][]). `lookup/2` picks the
+single best tag, shortening the range until something matches:
+
+```elixir
+iex> LangTags.Match.lookup(["en-GB", "fr", "zh-Hant"], ["zh-Hant-CN", "en"])
+"zh-Hant"
+
+iex> LangTags.Match.lookup(["en-GB", "fr"], ["de"])
+nil
+```
+
+`filter/2` keeps every tag a range covers instead of choosing one:
+
+```elixir
+iex> LangTags.Match.filter(["de-DE-1996", "de-Deva", "en-GB"], ["de-DE"])
+["de-DE-1996"]
+```
+
 Report the date of the bundled registry:
 
 ```elixir
@@ -192,6 +211,7 @@ Apache License 2.0. See [LICENSE][].
 
 [BCP 47]: https://tools.ietf.org/html/bcp47
 [RFC 5646]: https://tools.ietf.org/html/rfc5646
+[RFC 4647]: https://tools.ietf.org/html/rfc4647
 [Registry]: https://www.iana.org/assignments/language-subtag-registry
 [Docs]: https://hexdocs.pm/lang_tags
 [localize]: https://hex.pm/packages/localize
