@@ -88,27 +88,35 @@ iex> LangTags.date()
 
 See the [documentation][Docs] for the full API.
 
-## Relationship to ex_cldr
+## Relationship to localize and ex_cldr
 
-[ex_cldr][] also parses RFC 5646 tags, so the two libraries are easy to
-confuse. They answer different questions.
+[localize][] — and [ex_cldr][], the family it replaces — also parses RFC 5646
+tags, so it is easy to confuse them with this library. They answer different
+questions.
 
-ex_cldr resolves a tag to a *locale it supports*: it parses the tag
-structurally — including the `-u-` and `-t-` extensions — maps the result onto
-one of CLDR's 700-odd locales, and gives you the data to format numbers,
-dates, plurals and territory names for it.
+localize resolves a tag to a *locale it ships data for*: it normalizes the tag,
+resolves it to a CLDR canonical form through likely-subtag resolution, and
+gives you the data to format numbers, dates, units, plurals and territory names
+for one of CLDR's ~766 locales. `Localize.validate_locale/1` answers "can I
+localize with this?"
 
 `lang_tags` validates a tag against the *IANA registry*: whether every subtag
-is actually registered, whether the tag or one of its subtags is deprecated
-and what its preferred value is, and whether it breaks a `Suppress-Script` or
-variant prefix rule — with a code and a message for each problem it finds.
+is actually registered, whether the tag or one of its subtags is deprecated and
+what its preferred value is, and whether it breaks a `Suppress-Script` or
+variant prefix rule — with a code and a message for each problem it finds. A
+tag can be valid and still have no CLDR locale behind it, and it can resolve to
+a CLDR locale while being deprecated or misformatted.
 
-The two compose. Validate and canonicalize untrusted input — a user setting,
-an `Accept-Language` header, a locale column — with `lang_tags`, then hand the
-canonical tag to `Cldr.validate_locale/2` to choose the locale you will
+The two compose. Validate and canonicalize untrusted input — a user setting, an
+`Accept-Language` header, a locale column — with `lang_tags`, then hand the
+canonical tag to `Localize.validate_locale/1` to choose the locale you will
 actually format with. Reach for `lang_tags` alone when you accept, correct or
-store tags but never localize; reach for ex_cldr alone when your locales are a
+store tags but never localize; reach for localize alone when your locales are a
 fixed set you control.
+
+Already on ex_cldr? The same split applies, with `Cldr.validate_locale/2` in
+place of `Localize.validate_locale/1`. ex_cldr is superseded by localize; see
+its documentation for the current support timeline.
 
 ## Updating the registry
 
@@ -141,6 +149,7 @@ Apache License 2.0. See [LICENSE][].
 [RFC 5646]: https://tools.ietf.org/html/rfc5646
 [Registry]: https://www.iana.org/assignments/language-subtag-registry
 [Docs]: https://hexdocs.pm/lang_tags
+[localize]: https://hex.pm/packages/localize
 [ex_cldr]: https://hex.pm/packages/ex_cldr
 [language-tags]: https://github.com/mattcg/language-tags
 [LICENSE]: https://github.com/milmazz/lang_tags/blob/master/LICENSE
