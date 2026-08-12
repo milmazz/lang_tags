@@ -137,7 +137,7 @@ defmodule LangTags do
   ## Examples
 
       iex> LangTags.languages("zh") |> Enum.count()
-      28
+      38
       iex> LangTags.languages("en")
       ** (ArgumentError) 'en' is not a valid macrolanguage.
 

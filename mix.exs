@@ -14,13 +14,25 @@ defmodule LangTags.Mixfile do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
-      docs: docs()
+      docs: docs(),
+      # mix lang_tags.update reaches into OTP's HTTP stack, but the library
+      # itself needs nothing at runtime, so these stay out of the
+      # application spec rather than being forced on every consumer.
+      elixirc_options: [no_warn_undefined: [:httpc, :public_key]]
     ]
   end
 
   def application do
-    [extra_applications: []]
+    [extra_applications: extra_applications(Mix.env())]
   end
+
+  # The library starts no processes and needs nothing at runtime. OTP's HTTP
+  # stack is required only by `mix lang_tags.update`, so it is declared for
+  # dev and test alone: Mix prunes unused applications from the code path,
+  # and without this the task cannot load :public_key. Consumers building for
+  # prod get an empty application spec.
+  defp extra_applications(env) when env in [:dev, :test], do: [:inets, :ssl, :public_key]
+  defp extra_applications(_env), do: []
 
   defp deps do
     [
