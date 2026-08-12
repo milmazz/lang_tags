@@ -36,7 +36,7 @@ defmodule LangTags.SubTag do
 
       iex> LangTags.SubTag.find("tlh", "language")
       %{"Record" => %{"Added" => "2005-10-16",
-          "Description" => ["Klingon", "tlhIngan-Hol"], "Subtag" => "tlh",
+          "Description" => ["Klingon", "tlhIngan Hol"], "Subtag" => "tlh",
           "Type" => "language"}, "Subtag" => "tlh"}
       iex> LangTags.SubTag.find("ef", "script")
       nil
