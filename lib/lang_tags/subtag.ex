@@ -44,9 +44,15 @@ defmodule LangTags.SubTag do
   """
   @spec find(String.t(), String.t()) :: map | nil
   def find(subtag, type) do
-    new(subtag, type)
-  rescue
-    ArgumentError -> nil
+    # Callers probe several types per code, so a miss is routine and is
+    # returned rather than raised.
+    subtag = String.downcase(subtag)
+    type = String.downcase(type)
+
+    case Registry.fetch_subtag(subtag, type) do
+      {:ok, record} -> %{"Subtag" => subtag, "Record" => record}
+      :error -> nil
+    end
   end
 
   @doc """
