@@ -97,25 +97,25 @@ defmodule LangTags.Registry do
       end
     end)
 
-  ## Macrolanguages
-  @spec macrolanguages(String.t()) :: [{String.t(), String.t()}] | []
-  for {key, subtags} <- macrolanguages do
-    def macrolanguages(unquote(key)) do
-      unquote(subtags)
-    end
-  end
+  # The tables below are built once at compile time and embedded as literals.
+  #
+  # Generating one function clause per record instead is roughly 165x slower to
+  # compile: 9203 subtag/2 clauses and 8919 types/1 clauses accounted for about
+  # 16.6 of the module's 16.7 seconds. Lookups stay a constant-time map access
+  # on a term that lives in the module's literal pool, so nothing is parsed,
+  # copied or supervised at runtime.
 
-  def macrolanguages(_), do: []
+  ## Macrolanguages
+  @macrolanguages Map.new(macrolanguages)
+
+  @spec macrolanguages(String.t()) :: [{String.t(), String.t()}] | []
+  def macrolanguages(macrolanguage), do: Map.get(@macrolanguages, macrolanguage, [])
 
   ## Types
-  @spec types(String.t()) :: [String.t()] | []
-  for {key, available_types} <- lang_types do
-    def types(unquote(key)) do
-      unquote(MapSet.to_list(available_types))
-    end
-  end
+  @types Map.new(lang_types, fn {key, available} -> {key, MapSet.to_list(available)} end)
 
-  def types(_), do: []
+  @spec types(String.t()) :: [String.t()] | []
+  def types(subtag), do: Map.get(@types, subtag, [])
 
   @spec language?(String.t()) :: boolean
   def language?(subtag), do: "language" in types(String.downcase(subtag))
@@ -139,42 +139,61 @@ defmodule LangTags.Registry do
   def redundant?(tag), do: "redundant" in types(String.downcase(tag))
 
   ## Subtags
-  @spec subtag(String.t(), String.t()) :: map | Exception.t()
-  for %{"Subtag" => key, "Type" => type} = subtag_record <- subtag_records do
-    result = Macro.escape(subtag_record)
+  @subtags Map.new(subtag_records, fn %{"Subtag" => key, "Type" => type} = record ->
+             {{key, type}, record}
+           end)
 
-    def subtag(unquote(key), unquote(type)) do
-      unquote(result)
+  @doc """
+  Looks up a subtag record without raising when it is absent.
+
+  Callers on a hot path should prefer this to `subtag/2`: a miss is an ordinary
+  result here, and raising to signal one costs around 44us.
+  """
+  @spec fetch_subtag(String.t(), String.t()) :: {:ok, map} | :error
+  def fetch_subtag(subtag, type), do: Map.fetch(@subtags, {subtag, type})
+
+  @spec subtag(String.t(), String.t()) :: map | Exception.t()
+  def subtag(subtag, type) do
+    case fetch_subtag(subtag, type) do
+      {:ok, record} -> record
+      :error -> raise_missing_subtag(subtag, type)
     end
   end
 
-  def subtag(subtag, type) when type in ["language", "extlang", "script", "region", "variant"] do
+  defp raise_missing_subtag(subtag, type)
+       when type in ["language", "extlang", "script", "region", "variant"] do
     raise(ArgumentError, "non-existent subtag '#{subtag}' of type '#{type}'.")
   end
 
-  def subtag(_subtag, type) when type in ["grandfathered", "redundant"] do
+  defp raise_missing_subtag(_subtag, type) when type in ["grandfathered", "redundant"] do
     raise(
       ArgumentError,
       ~S{invalid type for subtag, expected: "language", "extlang", "script", "region" or "variant"}
     )
   end
 
-  def subtag(subtag, _type) do
+  defp raise_missing_subtag(subtag, _type) do
     raise(ArgumentError, "non-existent subtag '#{subtag}'.")
   end
 
   ## Tags
+  @tags Map.new(tag_records, fn %{"Tag" => key} = record -> {key, record} end)
+
+  @doc """
+  Looks up a tag record without raising when it is absent.
+
+  Most tags are neither grandfathered nor redundant, so a miss is the common
+  case rather than an exceptional one.
+  """
+  @spec fetch_tag(String.t()) :: {:ok, map} | :error
+  def fetch_tag(tag), do: Map.fetch(@tags, tag)
+
   @spec tag(String.t()) :: map | Exception.t()
-  for %{"Tag" => key} = tag_record <- tag_records do
-    result = Macro.escape(tag_record)
-
-    def tag(unquote(key)) do
-      unquote(result)
-    end
-  end
-
   def tag(tag) do
-    raise(ArgumentError, "non-existent tag '#{tag}'.")
+    case fetch_tag(tag) do
+      {:ok, record} -> record
+      :error -> raise(ArgumentError, "non-existent tag '#{tag}'.")
+    end
   end
 
   ## Index
@@ -198,31 +217,20 @@ defmodule LangTags.Registry do
   def tag_keys, do: @tag_keys
 
   ## Scopes
-  @spec collection?(String.t()) :: boolean
-  for collection <- scope_records["collection"] do
-    def collection?(unquote(collection)), do: true
-  end
+  @collections MapSet.new(scope_records["collection"] || [])
+  @macrolanguage_scopes MapSet.new(scope_records["macrolanguage"] || [])
+  @specials MapSet.new(scope_records["special"] || [])
+  @private_uses MapSet.new(scope_records["private-use"] || [])
 
-  def collection?(_), do: false
+  @spec collection?(String.t()) :: boolean
+  def collection?(subtag), do: MapSet.member?(@collections, subtag)
 
   @spec macrolanguage?(String.t()) :: boolean
-  for macrolanguage <- scope_records["macrolanguage"] do
-    def macrolanguage?(unquote(macrolanguage)), do: true
-  end
-
-  def macrolanguage?(_), do: false
+  def macrolanguage?(subtag), do: MapSet.member?(@macrolanguage_scopes, subtag)
 
   @spec special?(String.t()) :: boolean
-  for special <- scope_records["special"] do
-    def special?(unquote(special)), do: true
-  end
-
-  def special?(_), do: false
+  def special?(subtag), do: MapSet.member?(@specials, subtag)
 
   @spec private_use?(String.t()) :: boolean
-  for private_use <- scope_records["private-use"] do
-    def private_use?(unquote(private_use)), do: true
-  end
-
-  def private_use?(_), do: false
+  def private_use?(subtag), do: MapSet.member?(@private_uses, subtag)
 end

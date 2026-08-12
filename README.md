@@ -7,9 +7,10 @@
 Work with IANA language tags in Elixir, based on [BCP 47][] ([RFC 5646][]) and
 the [IANA language subtag registry][Registry].
 
-The registry is parsed at compile time into pattern-matched function heads, so
-lookups are plain function dispatch: there is no runtime parsing, no ETS table,
-no process to supervise, and **no runtime dependencies**.
+The registry is parsed at compile time into lookup tables embedded in the
+compiled module, so a lookup is a constant-time map access on a term that is
+already in memory: there is no runtime parsing, no ETS table, no process to
+supervise, and **no runtime dependencies**.
 
 ## Installation
 
