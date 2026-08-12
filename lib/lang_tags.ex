@@ -10,7 +10,9 @@ defmodule LangTags do
   For more information, see [BCP47](https://tools.ietf.org/html/bcp47)
   """
 
-  alias LangTags.{Registry, SubTag, Tag}
+  alias LangTags.Registry
+  alias LangTags.SubTag
+  alias LangTags.Tag
 
   @doc """
   Shortcut for `LangTags.Tag.new/1`

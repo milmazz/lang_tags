@@ -1,6 +1,5 @@
 defmodule LangTags.TagTest do
   use ExUnit.Case, async: true
-  doctest LangTags.Tag
 
   import LangTags.Tag,
     only: [
@@ -18,6 +17,8 @@ defmodule LangTags.TagTest do
     ]
 
   alias LangTags.SubTag, as: ST
+
+  doctest LangTags.Tag
 
   test "type/1 returns 'grandfathered'" do
     # Classified as grandfathered in the registry.
@@ -38,20 +39,20 @@ defmodule LangTags.TagTest do
 
   test "subtags/1 returns subtags with correct type" do
     subtags = "en" |> new() |> subtags()
-    assert subtags |> Enum.count() == 1
+    assert Enum.count(subtags) == 1
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "en"
 
     # Lowercase - lookup should be case insensitive.
     subtags = "en-mt" |> new() |> subtags()
-    assert subtags |> Enum.count() == 2
+    assert Enum.count(subtags) == 2
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "en"
     assert subtags |> Enum.at(1) |> ST.type() == "region"
     assert subtags |> Enum.at(1) |> ST.format() == "MT"
 
     subtags = "en-mt-arab" |> new() |> subtags()
-    assert subtags |> Enum.count() == 3
+    assert Enum.count(subtags) == 3
     assert subtags |> Enum.at(0) |> ST.type() == "language"
     assert subtags |> Enum.at(0) |> ST.format() == "en"
     assert subtags |> Enum.at(1) |> ST.type() == "region"
@@ -64,14 +65,14 @@ defmodule LangTags.TagTest do
     assert "hello" |> new() |> subtags() == []
 
     subtags = "en-hello" |> new() |> subtags()
-    assert subtags |> Enum.count() == 1
+    assert Enum.count(subtags) == 1
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "en"
   end
 
   test "subtags/1 handles private tags" do
     subtags = "en-GB-x-Beano" |> new() |> subtags()
-    assert subtags |> Enum.count() == 2
+    assert Enum.count(subtags) == 2
     assert subtags |> List.first() |> ST.type() == "language"
     assert subtags |> List.first() |> ST.format() == "en"
     assert subtags |> List.last() |> ST.type() == "region"
@@ -79,19 +80,19 @@ defmodule LangTags.TagTest do
   end
 
   test "subtags/1 returns empty array for grandfathered tag" do
-    tag = "en-GB-oed" |> new()
-    assert tag |> type() == "grandfathered"
-    subtags = tag |> subtags()
+    tag = new("en-GB-oed")
+    assert type(tag) == "grandfathered"
+    subtags = subtags(tag)
     assert subtags == []
-    assert tag |> region() == nil
-    assert tag |> language() == nil
+    assert region(tag) == nil
+    assert language(tag) == nil
   end
 
   test "subtags/1 returns array for redundant tag" do
-    tag = "az-Arab" |> new()
-    assert tag |> type() == "redundant"
-    subtags = tag |> subtags()
-    assert subtags |> Enum.count() == 2
+    tag = new("az-Arab")
+    assert type(tag) == "redundant"
+    subtags = subtags(tag)
+    assert Enum.count(subtags) == 2
     assert subtags |> List.first() |> ST.format() == "az"
     assert subtags |> List.last() |> ST.format() == "Arab"
   end
@@ -109,49 +110,49 @@ defmodule LangTags.TagTest do
 
   test "valid?/1 returns true for non-deprecated grandfathered tag" do
     # Grandfathered but not deprecated, therefore valid.
-    tag = "i-default" |> new()
-    assert tag |> type() == "grandfathered"
-    refute tag |> deprecated()
-    assert tag |> valid?()
+    tag = new("i-default")
+    assert type(tag) == "grandfathered"
+    refute deprecated(tag)
+    assert valid?(tag)
   end
 
   test "valid?/1 returns true for non-deprecated redundant tag" do
     # Redundant but not deprecated, therefore valid.
-    tag = "zh-Hans" |> new()
-    assert tag |> type() == "redundant"
-    refute tag |> deprecated()
-    assert tag |> valid?()
+    tag = new("zh-Hans")
+    assert type(tag) == "redundant"
+    refute deprecated(tag)
+    assert valid?(tag)
 
-    tag = "es-419" |> new()
-    assert tag |> type() == "redundant"
-    refute tag |> deprecated()
-    assert tag |> valid?()
+    tag = new("es-419")
+    assert type(tag) == "redundant"
+    refute deprecated(tag)
+    assert valid?(tag)
   end
 
   test "valid?/1 returns false for non-existent tag" do
-    refute "zzz" |> new |> valid?()
+    refute "zzz" |> new() |> valid?()
     refute "zzz-Latn" |> new() |> valid?()
     refute "en-Lzzz" |> new() |> valid?()
   end
 
   test "valid?/1 returns false for deprecated grandfathered tag" do
     # Grandfathered and deprecated, therefore invalid.
-    tag = "art-lojban" |> new()
-    assert tag |> type() == "grandfathered"
-    assert tag |> deprecated()
-    refute tag |> valid?()
+    tag = new("art-lojban")
+    assert type(tag) == "grandfathered"
+    assert deprecated(tag)
+    refute valid?(tag)
   end
 
   test "valid?/1 returns false for deprecated redundant tag" do
     # Redundant and deprecated, therefore invalid.
-    tag = "zh-cmn" |> new()
-    assert tag |> type() == "redundant"
-    assert tag |> deprecated()
-    refute tag |> valid?()
-    tag = "zh-cmn-Hans" |> new()
-    assert tag |> type() == "redundant"
-    assert tag |> deprecated()
-    refute tag |> valid?()
+    tag = new("zh-cmn")
+    assert type(tag) == "redundant"
+    assert deprecated(tag)
+    refute valid?(tag)
+    tag = new("zh-cmn-Hans")
+    assert type(tag) == "redundant"
+    assert deprecated(tag)
+    refute valid?(tag)
   end
 
   test "valid?/1 returns false if contains deprecated subtags" do
@@ -216,55 +217,55 @@ defmodule LangTags.TagTest do
 
   test "deprecated/1 returns deprecation date when available" do
     # Redundant and deprecated.
-    tag = "zh-cmn-Hant" |> new()
-    assert tag |> type() == "redundant"
-    assert tag |> deprecated() == "2009-07-29"
+    tag = new("zh-cmn-Hant")
+    assert type(tag) == "redundant"
+    assert deprecated(tag) == "2009-07-29"
 
     # Redundant but not deprecated.
-    tag = "zh-Hans" |> new()
-    assert tag |> type() == "redundant"
-    refute tag |> deprecated()
+    tag = new("zh-Hans")
+    assert type(tag) == "redundant"
+    refute deprecated(tag)
 
     # Grandfathered and deprecated.
-    tag = "zh-xiang" |> new()
-    assert tag |> type() == "grandfathered"
-    assert tag |> deprecated() == "2009-07-29"
+    tag = new("zh-xiang")
+    assert type(tag) == "grandfathered"
+    assert deprecated(tag) == "2009-07-29"
 
     # Grandfathered but not deprecated.
-    tag = "i-default" |> new()
-    assert tag |> type() == "grandfathered"
-    refute tag |> deprecated()
+    tag = new("i-default")
+    assert type(tag) == "grandfathered"
+    refute deprecated(tag)
   end
 
   test "added/1 returns add date when available" do
     # Redundant and deprecated.
-    tag = "zh-cmn-Hant" |> new()
-    assert tag |> type() == "redundant"
-    assert tag |> added() == "2005-07-15"
+    tag = new("zh-cmn-Hant")
+    assert type(tag) == "redundant"
+    assert added(tag) == "2005-07-15"
 
     # Redundant but not deprecated.
-    tag = "zh-Hans" |> new()
-    assert tag |> type() == "redundant"
-    refute tag |> deprecated()
-    assert tag |> added() == "2003-05-30"
+    tag = new("zh-Hans")
+    assert type(tag) == "redundant"
+    refute deprecated(tag)
+    assert added(tag) == "2003-05-30"
 
     # Grandfathered and deprecated.
-    tag = "zh-xiang" |> new()
-    assert tag |> type() == "grandfathered"
-    assert tag |> added() == "1999-12-18"
+    tag = new("zh-xiang")
+    assert type(tag) == "grandfathered"
+    assert added(tag) == "1999-12-18"
 
     # Grandfathered but not deprecated.
-    tag = "i-default" |> new()
-    assert tag |> type() == "grandfathered"
-    refute tag |> deprecated()
-    assert tag |> added() == "1998-03-10"
+    tag = new("i-default")
+    assert type(tag) == "grandfathered"
+    refute deprecated(tag)
+    assert added(tag) == "1998-03-10"
   end
 
   test "descriptions/1 returns descriptions when available" do
-    tag = "i-default" |> new()
-    assert tag |> type() == "grandfathered"
-    refute tag |> deprecated()
-    assert tag |> descriptions() == ["Default Language"]
+    tag = new("i-default")
+    assert type(tag) == "grandfathered"
+    refute deprecated(tag)
+    assert descriptions(tag) == ["Default Language"]
 
     # Otherwise returns an empty array.
     assert "en" |> new() |> descriptions() == []
@@ -282,22 +283,22 @@ defmodule LangTags.TagTest do
   end
 
   test "preferred/1 returns preferred tag if available" do
-    tag = "zh-cmn-Hant" |> new()
+    tag = new("zh-cmn-Hant")
 
-    assert tag |> type() == "redundant"
-    assert tag |> deprecated()
-    assert tag |> preferred()
+    assert type(tag) == "redundant"
+    assert deprecated(tag)
+    assert preferred(tag)
     assert tag |> preferred() |> format() == "cmn-Hant"
 
     refute "zh-Hans" |> new() |> preferred()
   end
 
   test "region/1 and language/1 return subtags for redundant tags" do
-    tag = "es-419" |> new()
+    tag = new("es-419")
     assert tag |> region() |> descriptions() == ["Latin America and the Caribbean"]
     assert tag |> language() |> descriptions() == ["Spanish", "Castilian"]
 
-    tag = "sgn-NL" |> new()
+    tag = new("sgn-NL")
     assert tag |> region() |> descriptions() == ["Netherlands"]
     assert tag |> language() |> descriptions() == ["Sign languages"]
   end

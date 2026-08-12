@@ -8,7 +8,8 @@ defmodule LangTags.Tag do
    For more information, see [section 2.2.8](https://tools.ietf.org/html/bcp47#section-2.2.8)
   """
 
-  alias LangTags.{Registry, SubTag}
+  alias LangTags.Registry
+  alias LangTags.SubTag
 
   @typedoc """
   A single validation failure.
@@ -73,7 +74,7 @@ defmodule LangTags.Tag do
   def preferred(tag) when is_map(tag) do
     preferred = tag["Record"]["Preferred-Value"]
 
-    if preferred, do: new(preferred), else: nil
+    if preferred, do: new(preferred)
   end
 
   @doc """
@@ -233,7 +234,7 @@ defmodule LangTags.Tag do
     {codes, private} =
       tag["Tag"] |> String.split("-") |> Enum.split_while(&(String.length(&1) > 1))
 
-    classified = Enum.with_index(codes) |> Enum.map(fn {code, i} -> classify(code, i) end)
+    classified = codes |> Enum.with_index() |> Enum.map(fn {code, i} -> classify(code, i) end)
 
     Enum.concat([
       private_use_errors(private),

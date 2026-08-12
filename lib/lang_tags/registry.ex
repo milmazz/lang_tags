@@ -13,9 +13,8 @@ defmodule LangTags.Registry do
 
   {_record, lang_types, subtag_records, tag_records, scope_records, macrolanguages} =
     Enum.reduce(registry, {%{}, %{}, [], [], %{}, %{}}, fn line,
-                                                           {record, lang_types, subtag_records,
-                                                            tag_records, scope_records,
-                                                            macrolanguages} ->
+                                                           {record, lang_types, subtag_records, tag_records,
+                                                            scope_records, macrolanguages} ->
       case line |> String.trim() |> :binary.split(pattern) do
         # Records are separated by lines containing only the sequence "%%" (record-jar)
         ["%%"] ->
@@ -51,8 +50,7 @@ defmodule LangTags.Registry do
                 lang_types =
                   Map.update(lang_types, tag, MapSet.new([type]), &MapSet.put(&1, type))
 
-                {lang_types, subtag_records, [record | tag_records], scope_records,
-                 macrolanguages}
+                {lang_types, subtag_records, [record | tag_records], scope_records, macrolanguages}
 
               %{"File-Date" => file_date} ->
                 def date do
@@ -66,34 +64,32 @@ defmodule LangTags.Registry do
 
         ["Tag", v] ->
           # Lowercase for consistency (case is only a formatting convention, not a standard requirement).
-          {Map.put(record, "Tag", String.downcase(v)), lang_types, subtag_records, tag_records,
-           scope_records, macrolanguages}
+          {Map.put(record, "Tag", String.downcase(v)), lang_types, subtag_records, tag_records, scope_records,
+           macrolanguages}
 
         ["Subtag", v] ->
           # Lowercase for consistency (case is only a formatting convention, not a standard requirement).
-          {Map.put(record, "Subtag", String.downcase(v)), lang_types, subtag_records, tag_records,
-           scope_records, macrolanguages}
+          {Map.put(record, "Subtag", String.downcase(v)), lang_types, subtag_records, tag_records, scope_records,
+           macrolanguages}
 
         ["Type", v] ->
           # Lowercase for consistency (case is only a formatting convention, not a standard requirement).
-          {Map.put(record, "Type", String.downcase(v)), lang_types, subtag_records, tag_records,
-           scope_records, macrolanguages}
-
-        ["Comments", v] ->
-          {Map.put(record, "Comments", [v]), lang_types, subtag_records, tag_records,
-           scope_records, macrolanguages}
-
-        ["Description", v] ->
-          {Map.update(record, "Description", [v], &(&1 ++ [v])), lang_types, subtag_records,
-           tag_records, scope_records, macrolanguages}
-
-        [k, v] ->
-          {Map.put(record, k, v), lang_types, subtag_records, tag_records, scope_records,
+          {Map.put(record, "Type", String.downcase(v)), lang_types, subtag_records, tag_records, scope_records,
            macrolanguages}
 
+        ["Comments", v] ->
+          {Map.put(record, "Comments", [v]), lang_types, subtag_records, tag_records, scope_records, macrolanguages}
+
+        ["Description", v] ->
+          {Map.update(record, "Description", [v], &(&1 ++ [v])), lang_types, subtag_records, tag_records, scope_records,
+           macrolanguages}
+
+        [k, v] ->
+          {Map.put(record, k, v), lang_types, subtag_records, tag_records, scope_records, macrolanguages}
+
         [comment] ->
-          {Map.update(record, "Comments", [comment], &(&1 ++ [comment])), lang_types,
-           subtag_records, tag_records, scope_records, macrolanguages}
+          {Map.update(record, "Comments", [comment], &(&1 ++ [comment])), lang_types, subtag_records, tag_records,
+           scope_records, macrolanguages}
       end
     end)
 
@@ -180,8 +176,7 @@ defmodule LangTags.Registry do
     end
   end
 
-  defp raise_missing_subtag(subtag, type)
-       when type in ["language", "extlang", "script", "region", "variant"] do
+  defp raise_missing_subtag(subtag, type) when type in ["language", "extlang", "script", "region", "variant"] do
     raise(ArgumentError, "non-existent subtag '#{subtag}' of type '#{type}'.")
   end
 
