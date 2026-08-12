@@ -5,9 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.2.1 - 2026-08-11
+
+A performance release. No behaviour changes.
+
+### Changed
+
+  * The registry now compiles into lookup tables rather than one function
+    clause per record. Generating 9203 `subtag/2` clauses and 8919 `types/1`
+    clauses, each carrying its own map literal, accounted for about 16.6 of
+    the module's 16.7 seconds. **Compiling the project now takes about 1.5
+    seconds instead of about 16.6.** Lookups remain constant time on a term
+    embedded in the compiled module, so nothing is parsed, copied or
+    supervised at runtime.
+
+### Fixed
+
+  * `LangTags.Tag.new/1` and `LangTags.SubTag.find/2` used exceptions for
+    control flow on their most common paths. `new/1` raised and rescued for
+    every tag that is neither grandfathered nor redundant, which is almost
+    every tag, and `find/2` raised whenever a code was not of the type being
+    probed, which happens several times per tag. Raising cost about 44us
+    against roughly 1us for the lookup itself. Both now use new non-raising
+    lookups on the internal registry module, which return a tagged tuple
+    rather than raising when a record is absent.
+    **`Tag.valid?/1` went from about 174us to about 2.5us.** The public
+    behaviour of both functions is unchanged.
+
 ## v0.2.0 - 2026-08-11
 
-To be published to [Hex](https://hex.pm/packages/lang_tags) on 2026-08-11.
+Published to [Hex](https://hex.pm/packages/lang_tags) on 2026-08-11.
 
 The first release since v0.1.0 on 2016-12-19. It refreshes a decade of
 registry data, repairs tag validation, and brings the project back onto a

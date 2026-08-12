@@ -48,10 +48,11 @@ defmodule LangTags.Tag do
     # convention, not a standard requirement)
     tag = tag |> String.trim() |> String.downcase()
 
-    try do
-      %{"Tag" => tag, "Record" => Registry.tag(tag)}
-    rescue
-      ArgumentError -> %{"Tag" => tag}
+    # Most tags are neither grandfathered nor redundant, so a miss here is the
+    # common case and must not go through an exception.
+    case Registry.fetch_tag(tag) do
+      {:ok, record} -> %{"Tag" => tag, "Record" => record}
+      :error -> %{"Tag" => tag}
     end
   end
 
