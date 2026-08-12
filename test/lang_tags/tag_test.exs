@@ -17,8 +17,55 @@ defmodule LangTags.TagTest do
     ]
 
   alias LangTags.SubTag, as: ST
+  alias LangTags.Tag
 
-  doctest LangTags.Tag
+  doctest Tag
+
+  test "extensions/1 groups each singleton with the subtags that follow it" do
+    assert Tag.extensions("en-u-ca-buddhist-t-en") == %{"u" => ["ca", "buddhist"], "t" => ["en"]}
+  end
+
+  test "extensions/1 returns an empty map for a tag without extensions" do
+    assert Tag.extensions("en-US") == %{}
+  end
+
+  test "extensions/1 excludes the private-use sequence" do
+    # 'x' introduces private use, not an extension. See RFC 5646 section 2.2.7.
+    assert Tag.extensions("en-u-ca-buddhist-x-priv") == %{"u" => ["ca", "buddhist"]}
+    assert Tag.extensions("en-x-priv") == %{}
+  end
+
+  test "extensions/1 returns an empty map for grandfathered tags" do
+    # 'i-klingon' opens with a singleton, but it is registered whole and so has
+    # no extension sequence to report.
+    assert Tag.extensions("i-klingon") == %{}
+  end
+
+  test "extensions/1 accepts a tag map as well as a string" do
+    assert "en-u-ca-buddhist" |> new() |> Tag.extensions() == %{"u" => ["ca", "buddhist"]}
+  end
+
+  test "private_use/1 returns the subtags following the 'x' singleton" do
+    assert Tag.private_use("en-x-priv-more") == ["priv", "more"]
+  end
+
+  test "private_use/1 returns an empty list when the tag has no private-use sequence" do
+    assert Tag.private_use("en-US") == []
+    assert Tag.private_use("en-u-ca-buddhist") == []
+  end
+
+  test "private_use/1 reads a tag that is wholly private use" do
+    assert Tag.private_use("x-local") == ["local"]
+  end
+
+  test "private_use/1 returns an empty list for grandfathered tags" do
+    assert Tag.private_use("i-klingon") == []
+  end
+
+  test "private_use/1 lowercases the sequence and accepts a tag map" do
+    assert Tag.private_use("en-X-Priv") == ["priv"]
+    assert "en-x-priv" |> new() |> Tag.private_use() == ["priv"]
+  end
 
   test "type/1 returns 'grandfathered'" do
     # Classified as grandfathered in the registry.

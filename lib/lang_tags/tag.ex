@@ -95,6 +95,44 @@ defmodule LangTags.Tag do
   def subtags(tag) when is_binary(tag), do: tag |> new() |> subtags()
 
   @doc """
+  Returns the extension sequences of the tag, keyed by their singleton.
+
+  Extensions are the part of a tag that `subtags/1` does not report, since
+  they are not registered subtags. The private-use sequence introduced by
+  `x` is not an extension and is returned by `private_use/1` instead.
+
+  For more information, see [RFC 5646 section 2.2.6](https://tools.ietf.org/html/rfc5646#section-2.2.6).
+
+  ## Examples
+
+      iex> LangTags.Tag.extensions("en-t-en-u-ca-buddhist")
+      %{"t" => ["en"], "u" => ["ca", "buddhist"]}
+      iex> LangTags.Tag.extensions("en-US")
+      %{}
+
+  """
+  @spec extensions(map | String.t()) :: %{optional(String.t()) => [String.t()]}
+  def extensions(tag) when is_map(tag), do: process_extensions(tag, tag["Record"]["Type"])
+  def extensions(tag) when is_binary(tag), do: tag |> new() |> extensions()
+
+  @doc """
+  Returns the subtags of the tag's private-use sequence, without the `x` singleton.
+
+  For more information, see [RFC 5646 section 2.2.7](https://tools.ietf.org/html/rfc5646#section-2.2.7).
+
+  ## Examples
+
+      iex> LangTags.Tag.private_use("en-x-priv-more")
+      ["priv", "more"]
+      iex> LangTags.Tag.private_use("en-US")
+      []
+
+  """
+  @spec private_use(map | String.t()) :: [String.t()]
+  def private_use(tag) when is_map(tag), do: process_private_use(tag, tag["Record"]["Type"])
+  def private_use(tag) when is_binary(tag), do: tag |> new() |> private_use()
+
+  @doc """
   Shortcut for `find/2` with a `language` filter
 
   ## Examples
@@ -497,6 +535,42 @@ defmodule LangTags.Tag do
       end)
 
     Enum.reverse(subtags)
+  end
+
+  # Grandfathered tags are registered whole, so a leading singleton such as the
+  # "i" of "i-klingon" introduces nothing and must not be read as a sequence.
+  defp process_extensions(_tag, "grandfathered"), do: %{}
+
+  defp process_extensions(tag, _) do
+    tag
+    |> singleton_sequences()
+    |> Enum.reject(fn {singleton, _subtags} -> singleton == "x" end)
+    |> Map.new()
+  end
+
+  defp process_private_use(_tag, "grandfathered"), do: []
+
+  defp process_private_use(tag, _) do
+    case tag |> singleton_sequences() |> List.keyfind("x", 0) do
+      {"x", subtags} -> subtags
+      nil -> []
+    end
+  end
+
+  # Everything up to the first singleton is a registered subtag and belongs to
+  # `subtags/1`; from there on the tag is a series of singleton-led sequences.
+  defp singleton_sequences(tag) do
+    tag["Tag"]
+    |> String.split("-")
+    |> Enum.drop_while(&(String.length(&1) > 1))
+    |> chunk_by_singleton()
+  end
+
+  defp chunk_by_singleton([]), do: []
+
+  defp chunk_by_singleton([singleton | rest]) do
+    {subtags, remainder} = Enum.split_while(rest, &(String.length(&1) > 1))
+    [{singleton, subtags} | chunk_by_singleton(remainder)]
   end
 
   defp format_by_index(0, value, _acc), do: [value]
