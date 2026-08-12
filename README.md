@@ -111,6 +111,10 @@ deprecated and hands you the replacement to store.
 So the two compose: reject or repair the tag against the registry, then ask
 localize for a locale.
 
+<!-- The example below is compiled and run by test/lang_tags/localize_integration_test.exs. -->
+<!-- Keep the composition markers in place so that stays true. -->
+<!-- composition:start -->
+
 ```elixir
 defmodule MyApp.Locale do
   @doc "Resolve an externally supplied language tag to a locale we can format with."
@@ -132,6 +136,8 @@ defmodule MyApp.Locale do
   end
 end
 ```
+
+<!-- composition:end -->
 
 ```elixir
 # Case-corrected, then resolved.

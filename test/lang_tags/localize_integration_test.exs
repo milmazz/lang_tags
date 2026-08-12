@@ -9,20 +9,26 @@ if Code.ensure_loaded?(Localize) do
   readme = Path.expand("../../README.md", __DIR__)
 
   # Compile the example out of the README itself. Copying it here would let the
-  # two drift apart, which is the failure this file exists to catch.
-  snippet =
-    case Regex.run(
-           ~r/```elixir\n(defmodule MyApp\.Locale do\n.*?\nend)\n```/s,
-           File.read!(readme)
-         ) do
-      [_, code] ->
-        code
+  # two drift apart, which is the failure this file exists to catch. The markers
+  # delimit the block so that renaming the module or reshaping the example does
+  # not break extraction.
+  start_marker = "<!-- composition:start -->"
+  end_marker = "<!-- composition:end -->"
 
-      nil ->
+  snippet =
+    with [_before, rest] <- String.split(File.read!(readme), start_marker, parts: 2),
+         [block, _after] <- String.split(rest, end_marker, parts: 2) do
+      block
+      |> String.trim()
+      |> String.trim_leading("```elixir")
+      |> String.trim_trailing("```")
+      |> String.trim()
+    else
+      _ ->
         raise """
-        README.md no longer contains a `defmodule MyApp.Locale do ... end` example \
-        in an ```elixir block. Update this test to match the README, or restore \
-        the example.
+        Could not find the composition example in README.md. Expected it between \
+        `#{start_marker}` and `#{end_marker}`. Restore those markers around the \
+        example, or update this test to match the README.
         """
     end
 
