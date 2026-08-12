@@ -327,8 +327,7 @@ defmodule LangTags.Tag do
       2 ->
         [String.upcase(value) | acc]
       4 ->
-        {char, rest} = String.Casing.titlecase_once(value)
-        [char <> rest | acc]
+        [String.capitalize(value) | acc]
       _ ->
         [value | acc]
     end
