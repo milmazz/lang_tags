@@ -259,10 +259,7 @@ defmodule LangTags.SubTag do
   end
 
   defp process_format(subtag, type) when type == "region", do: String.upcase(subtag)
-  defp process_format(subtag, type) when type == "script" do
-    {char, rest} = String.Casing.titlecase_once(subtag)
-    char <> rest
-  end
+  defp process_format(subtag, type) when type == "script", do: String.capitalize(subtag)
   defp process_format(subtag, _), do: subtag
 
   @doc """
