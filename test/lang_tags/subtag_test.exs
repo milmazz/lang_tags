@@ -2,9 +2,19 @@ defmodule LangTags.SubTagTest do
   use ExUnit.Case, async: true
   doctest LangTags.SubTag
 
-  import LangTags.SubTag, only: [added: 1, comments: 1, deprecated: 1,
-                                 descriptions: 1, format: 1, new: 2,
-                                 preferred: 1, scope: 1, script: 1, type: 1]
+  import LangTags.SubTag,
+    only: [
+      added: 1,
+      comments: 1,
+      deprecated: 1,
+      descriptions: 1,
+      format: 1,
+      new: 2,
+      preferred: 1,
+      scope: 1,
+      script: 1,
+      type: 1
+    ]
 
   test "type/1 returns type" do
     assert new("zh", "language") |> type() == "language"
@@ -13,7 +23,11 @@ defmodule LangTags.SubTagTest do
 
   test "descriptions/1 returns descriptions" do
     assert new("IQ", "region") |> descriptions() == ["Iraq"]
-    assert new("vsv", "extlang") |> descriptions() == ["Valencian Sign Language", "Llengua de signes valenciana"]
+
+    assert new("vsv", "extlang") |> descriptions() == [
+             "Valencian Sign Language",
+             "Llengua de signes valenciana"
+           ]
   end
 
   test "preferred/1 returns preferred subtag" do

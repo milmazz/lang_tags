@@ -10,7 +10,7 @@ defmodule LangTags do
   For more information, see [BCP47](https://tools.ietf.org/html/bcp47)
   """
 
-  alias LangTags.{Registry,Tag,SubTag}
+  alias LangTags.{Registry, Tag, SubTag}
 
   @doc """
   Shortcut for `LangTags.Tag.new/1`
@@ -21,7 +21,7 @@ defmodule LangTags do
       true
 
   """
-  @spec tags(String.t) :: map
+  @spec tags(String.t()) :: map
   def tags(tag), do: Tag.new(tag)
 
   @doc """
@@ -29,7 +29,7 @@ defmodule LangTags do
 
   For meaningful error output see `errors/1`.
   """
-  @spec check(map | String.t) :: boolean
+  @spec check(map | String.t()) :: boolean
   def check(tag) when is_map(tag), do: Tag.valid?(tag)
   def check(tag) when is_binary(tag), do: tag |> tags() |> check()
 
@@ -54,7 +54,7 @@ defmodule LangTags do
       ["grandfathered"]
 
   """
-  @spec types(String.t) :: [String.t] | []
+  @spec types(String.t()) :: [String.t()] | []
   def types(subtag, all \\ false) do
     type_info = subtag |> String.downcase() |> Registry.types()
 
@@ -62,8 +62,9 @@ defmodule LangTags do
   end
 
   defp process_types(type_info, true), do: type_info
+
   defp process_types(type_info, false) do
-    Enum.filter(type_info, fn(t) -> t != "grandfathered" && t != "redundant" end)
+    Enum.filter(type_info, fn t -> t != "grandfathered" && t != "redundant" end)
   end
 
   @doc """
@@ -85,14 +86,15 @@ defmodule LangTags do
   To get or check a single subtag by type use `language/1`, `region/1` or
   `type/2`.
   """
-  @spec subtags(String.t | [String.t]) :: [map]
+  @spec subtags(String.t() | [String.t()]) :: [map]
   def subtags(key) when is_binary(key), do: subtags([key])
+
   def subtags(keys) when is_list(keys) do
-    Enum.flat_map(keys, fn(key) ->
+    Enum.flat_map(keys, fn key ->
       key
       |> String.downcase()
       |> types()
-      |> Enum.map(fn(type) -> SubTag.new(key, type) end)
+      |> Enum.map(fn type -> SubTag.new(key, type) end)
     end)
   end
 
@@ -105,10 +107,11 @@ defmodule LangTags do
       ["Aargh"]
 
   """
-  @spec filter(String.t | [String.t]) :: [String.t]
+  @spec filter(String.t() | [String.t()]) :: [String.t()]
   def filter(subtag) when is_binary(subtag), do: filter([subtag])
+
   def filter(subtags) when is_list(subtags) do
-    Enum.filter(subtags, fn(key) ->
+    Enum.filter(subtags, fn key ->
       key |> String.downcase() |> types() == []
     end)
   end
@@ -142,16 +145,16 @@ defmodule LangTags do
       ** (ArgumentError) 'en' is not a valid macrolanguage.
 
   """
-  @spec languages(String.t) :: [map] | Exception.t
+  @spec languages(String.t()) :: [map] | Exception.t()
   def languages(macrolanguage) do
     macrolanguage = String.downcase(macrolanguage)
 
     if SubTag.macrolanguage?(macrolanguage) do
       macrolanguage
       |> Registry.macrolanguages()
-      |> Enum.reduce([], fn({subtag, type}, acc) ->
-           [SubTag.new(subtag, type) | acc]
-         end)
+      |> Enum.reduce([], fn {subtag, type}, acc ->
+        [SubTag.new(subtag, type) | acc]
+      end)
     else
       raise(ArgumentError, "'#{macrolanguage}' is not a valid macrolanguage.")
     end
@@ -170,7 +173,7 @@ defmodule LangTags do
       nil
 
   """
-  @spec language(String.t) :: map | nil
+  @spec language(String.t()) :: map | nil
   def language(subtag), do: type(subtag, "language")
 
   @doc """
@@ -185,7 +188,7 @@ defmodule LangTags do
       nil
 
   """
-  @spec region(String.t) :: map | nil
+  @spec region(String.t()) :: map | nil
   def region(subtag), do: type(subtag, "region")
 
   @doc """
@@ -201,7 +204,7 @@ defmodule LangTags do
       nil
 
   """
-  @spec script(String.t) :: map | nil
+  @spec script(String.t()) :: map | nil
   def script(subtag), do: type(subtag, "script")
 
   @doc """
@@ -219,7 +222,7 @@ defmodule LangTags do
       nil
 
   """
-  @spec type(String.t, String.t) :: map | nil
+  @spec type(String.t(), String.t()) :: map | nil
   def type(subtag, type) when type in ["language", "extlang", "script", "region", "variant"] do
     SubTag.find(subtag, type)
   end
@@ -233,6 +236,6 @@ defmodule LangTags do
       true
 
   """
-  @spec date() :: String.t
+  @spec date() :: String.t()
   def date, do: Registry.date()
 end
