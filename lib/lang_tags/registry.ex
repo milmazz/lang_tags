@@ -104,6 +104,14 @@ defmodule LangTags.Registry do
   # 16.6 of the module's 16.7 seconds. Lookups stay a constant-time map access
   # on a term that lives in the module's literal pool, so nothing is parsed,
   # copied or supervised at runtime.
+  #
+  # Each attribute below is read from exactly one function, and it must stay
+  # that way. A module attribute is inlined wherever it is mentioned, and the
+  # literal pool does not fold the copies back together: measured on @subtags,
+  # a second reference adds about 160 KB to the compiled module and around a
+  # second of compile time, a third adds as much again. Anything that needs
+  # these tables should call the wrapper function rather than name the
+  # attribute a second time.
 
   ## Macrolanguages
   @macrolanguages Map.new(macrolanguages)
