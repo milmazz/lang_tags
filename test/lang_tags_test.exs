@@ -6,6 +6,44 @@ defmodule LangTagsTest do
 
   doctest L
 
+  test "all/1 returns every registered subtag of the requested type" do
+    scripts = L.all("script")
+
+    assert {"latn", "script"} in scripts
+    assert {"arab", "script"} in scripts
+    assert Enum.all?(scripts, fn {_code, type} -> type == "script" end)
+  end
+
+  test "all/1 excludes subtags of other types" do
+    scripts = L.all("script")
+
+    refute {"en", "language"} in scripts
+    refute {"gb", "region"} in scripts
+    refute Enum.any?(scripts, fn {code, _type} -> code == "en" end)
+  end
+
+  test "all/1 distinguishes types that share a code" do
+    # 'in' is registered twice: the (deprecated) Indonesian language, and India
+    # as a region. Filtering must key on the type, not the code alone.
+    assert {"in", "language"} in L.all("language")
+    assert {"in", "region"} in L.all("region")
+  end
+
+  test "all/1 returns lowercase codes" do
+    assert Enum.all?(L.all("region"), fn {code, _type} -> code == String.downcase(code) end)
+  end
+
+  test "all/1 includes deprecated subtags" do
+    # Moldovan is deprecated but still registered, so it is still listed.
+    assert {"mo", "language"} in L.all("language")
+  end
+
+  test "all/1 rejects types that are not subtag types" do
+    # Grandfathered and redundant records are tags, not subtags.
+    assert_raise FunctionClauseError, fn -> L.all("grandfathered") end
+    assert_raise FunctionClauseError, fn -> L.all("wubble") end
+  end
+
   test "date/0 returns file date" do
     assert L.date() =~ ~r/\d{4}-\d{2}-\d{2}/
   end
