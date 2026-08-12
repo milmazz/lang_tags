@@ -37,7 +37,8 @@ defmodule LangTags.Mixfile do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.40", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
+      {:styler, "~> 1.12", only: [:dev, :test], runtime: false}
     ] ++ localize_dep()
   end
 
