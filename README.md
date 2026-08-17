@@ -217,4 +217,4 @@ Apache License 2.0. See [LICENSE][].
 [localize]: https://hex.pm/packages/localize
 [ex_cldr]: https://hex.pm/packages/ex_cldr
 [language-tags]: https://github.com/mattcg/language-tags
-[LICENSE]: https://github.com/milmazz/lang_tags/blob/master/LICENSE
+[LICENSE]: https://github.com/milmazz/lang_tags/blob/main/LICENSE
