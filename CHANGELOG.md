@@ -5,6 +5,42 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.3.0 - 2026-08-17
+
+A feature release. Everything is additive; no existing behaviour changed, and
+the bundled registry is unchanged from v0.2.1.
+
+### Added
+
+  * `LangTags.Match` implements [RFC 4647](https://tools.ietf.org/html/rfc4647)
+    matching of language tags against language ranges, such as the ranges a
+    client sends in an `Accept-Language` header. `lookup/2` returns the single
+    best tag, shortening a range one subtag at a time until something matches,
+    and dropping a singleton along with the subtag that introduced it, so
+    `"zh-Hant-CN-x-private1-private2"` falls back to `"zh-Hant-CN"` without
+    ever trying `"zh-Hant-CN-x"`. `filter/2` implements basic filtering and
+    returns every tag a range covers, requiring the prefix to be followed by
+    `-`, so `"de-DE"` covers `"de-DE-1996"` but not `"de-Deva"`. Both compare
+    case-insensitively and return tags in the casing they were given. Neither
+    consults the registry, so the module adds nothing to compile time.
+    `lookup/2` returns `nil` for the RFC's notion of a default value, which
+    the RFC leaves to each application to define.
+  * `LangTags.Tag.extensions/1` returns a tag's extension sequences as a map
+    keyed by singleton, and `LangTags.Tag.private_use/1` returns the subtags
+    following `x`. `subtags/1` stops at the first singleton, so these
+    sequences were parsed and then discarded with no way to reach them. The
+    map is lossless because RFC 5646 forbids a singleton from appearing twice
+    in a tag. Grandfathered tags are registered whole, so both return empty
+    for them, as `subtags/1` already does.
+  * `LangTags.all/1` returns every registered subtag of a given type as
+    `{code, type}` pairs, for listing the regions or scripts behind a form or
+    a picker. Previously every lookup needed a code you already had. It
+    returns pairs rather than records, so listing 9203 subtags does not build
+    9203 maps; pass a code to `type/2` for the full record. Deprecated
+    subtags are included, since they are still registered. Grandfathered and
+    redundant records are tags rather than subtags and are excluded, matching
+    `type/2`.
+
 ## v0.2.1 - 2026-08-11
 
 A performance release. No behaviour changes.

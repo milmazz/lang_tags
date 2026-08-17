@@ -18,7 +18,7 @@ Add `lang_tags` to your dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:lang_tags, "~> 0.2"}]
+  [{:lang_tags, "~> 0.3"}]
 end
 ```
 
