@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+  * `LangTags.Tag.valid?/1` returned `true` for the empty tag (`""`) and for
+    tags with a leading, trailing, or doubled hyphen (`"-en"`, `"en-"`,
+    `"en--US"`). Splitting such tags produces empty components that every
+    subtag check silently skipped — the empty component landed in the
+    extension/private-use branch, where it was mistaken for a singleton.
+    These tags are now rejected, and `LangTags.Tag.errors/1` reports them
+    with the new `:empty` code.
+
 ## v0.3.0 - 2026-08-17
 
 A feature release. Everything is additive; no existing behaviour changed, and

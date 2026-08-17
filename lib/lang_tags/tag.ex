@@ -220,6 +220,8 @@ defmodule LangTags.Tag do
 
     * `:deprecated` - the tag itself is registered but deprecated
     * `:subtag_deprecated` - a subtag is deprecated
+    * `:empty` - the tag is empty, or a leading, trailing, or doubled hyphen
+      produces an empty subtag
     * `:no_language` - the tag does not begin with a language subtag
     * `:unknown` - a code is not in the registry
     * `:too_long` - a private-use subtag exceeds 8 characters
@@ -267,6 +269,26 @@ defmodule LangTags.Tag do
   end
 
   defp subtag_errors(tag) do
+    case empty_errors(tag["Tag"]) do
+      [] -> decomposition_errors(tag)
+      errors -> errors
+    end
+  end
+
+  # An empty tag, or a leading, trailing, or doubled hyphen, splits into empty
+  # components that no subtag check would recognize, so they are rejected
+  # before decomposition.
+  defp empty_errors(""), do: [error(:empty, "", "the tag is empty")]
+
+  defp empty_errors(tag) do
+    if "" in String.split(tag, "-") do
+      [error(:empty, "", "the tag contains an empty subtag")]
+    else
+      []
+    end
+  end
+
+  defp decomposition_errors(tag) do
     # Everything from the first singleton onwards is an extension or a
     # private-use sequence and is not classified as a subtag.
     {codes, private} =

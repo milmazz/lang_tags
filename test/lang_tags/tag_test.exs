@@ -220,6 +220,27 @@ defmodule LangTags.TagTest do
     refute "419" |> new() |> valid?()
   end
 
+  test "valid?/1 returns false for an empty tag" do
+    refute "" |> new() |> valid?()
+    refute "   " |> new() |> valid?()
+  end
+
+  test "valid?/1 returns false if the tag contains an empty subtag" do
+    refute "-en" |> new() |> valid?()
+    refute "en-" |> new() |> valid?()
+    refute "en--US" |> new() |> valid?()
+  end
+
+  test "errors/1 reports an empty tag" do
+    assert [%{code: :empty, message: "the tag is empty"}] = Tag.errors("")
+  end
+
+  test "errors/1 reports empty subtags" do
+    for tag <- ["-en", "en-", "en--US"] do
+      assert [%{code: :empty}] = Tag.errors(tag)
+    end
+  end
+
   test "valid?/1 returns false if language subtag is not front of tag" do
     refute "GB-en" |> new() |> valid?()
   end
